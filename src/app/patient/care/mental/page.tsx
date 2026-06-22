@@ -36,7 +36,7 @@ export default function MentalHealthPage() {
             <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 8 }}>Book a therapy session</h2>
             <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 24, lineHeight: 1.5 }}>Connect with a licensed therapist or psychiatrist today.</p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <Link href="#" style={{ padding: '11px 22px', background: '#fff', color: '#4C1D95', borderRadius: 100, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Therapist →</Link>
+              <Link href="/patient/care/mental/intake" style={{ padding: '11px 22px', background: '#fff', color: '#4C1D95', borderRadius: 100, fontSize: 13, fontWeight: 700, textDecoration: 'none' }}>Therapist →</Link>
               <Link href="#" style={{ padding: '11px 22px', background: 'rgba(255,255,255,0.15)', color: '#fff', borderRadius: 100, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>Psychiatrist →</Link>
             </div>
           </div>

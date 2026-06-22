@@ -20,7 +20,7 @@ export default function UrgentCarePage() {
             <h2 style={{ fontSize: 26, fontWeight: 700, color: '#fff', marginBottom: 8 }}>Start a visit in minutes</h2>
             <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.5, maxWidth: 400 }}>Describe your symptoms and a licensed provider will join your video visit immediately.</p>
           </div>
-          <Link href="#" style={{ display: 'block', padding: '16px 32px', background: '#F87171', color: '#fff', borderRadius: 100, fontSize: 16, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>Start visit now →</Link>
+          <Link href="/patient/care/urgent/intake" style={{ display: 'block', padding: '16px 32px', background: '#F87171', color: '#fff', borderRadius: 100, fontSize: 16, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>Start visit now →</Link>
         </div>
 
         {/* Common symptoms */}

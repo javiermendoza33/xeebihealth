@@ -21,12 +21,17 @@ const US_STATES = [
 ]
 
 const CARE_TYPES = [
-  { key: 'primary',      icon: '🫀', label: 'Primary Care',    sub: 'Checkups, prescriptions, chronic care' },
-  { key: 'mental',       icon: '🧠', label: 'Mental Health',   sub: 'Therapy, psychiatry, anxiety & more' },
-  { key: 'dermatology',  icon: '🌿', label: 'Dermatology',     sub: 'Acne, eczema, hair loss, skincare' },
-  { key: 'urgent',       icon: '🚨', label: 'Urgent Care',     sub: 'Infections, rashes, seen fast' },
-  { key: 'womens',       icon: '🌸', label: "Women's Health",  sub: 'Birth control, hormones, OB/GYN' },
-  { key: 'weight',       icon: '🥗', label: 'Weight Care',     sub: 'GLP-1, nutrition, weight management' },
+  { key: 'primary',     icon: '🫀', label: 'Primary Care',         sub: 'Checkups, prescriptions, chronic care' },
+  { key: 'mental',      icon: '🧠', label: 'Mental Health',        sub: 'Therapy, psychiatry, anxiety & more' },
+  { key: 'dermatology', icon: '🌿', label: 'Skincare',             sub: 'Acne, eczema, hair loss, skincare' },
+  { key: 'urgent',      icon: '🚨', label: 'Urgent Care',          sub: 'Infections, rashes, seen fast' },
+  { key: 'womens',      icon: '🌸', label: "Women's Health",       sub: 'Birth control, hormones, OB/GYN' },
+  { key: 'weight',      icon: '🥗', label: 'Weight Loss',          sub: 'GLP-1, nutrition, weight management' },
+  { key: 'male',        icon: '♂️',  label: 'Male Sexual Health',   sub: 'ED, testosterone, premature ejaculation' },
+  { key: 'hair',        icon: '💆', label: 'Hair Loss',            sub: 'Minoxidil, finasteride, regrowth plans' },
+  { key: 'longevity',   icon: '⏳', label: 'Longevity',            sub: 'Preventive care, biomarkers, aging' },
+  { key: 'menopause',   icon: '🌡️', label: 'Menopause',           sub: 'HRT, hot flashes, symptom management' },
+  { key: 'nutrition',   icon: '🍎', label: 'Nutrition',            sub: 'Diet coaching, meal planning, macros' },
 ]
 
 const sel: React.CSSProperties = { borderColor: 'var(--teal)', background: 'var(--teal-dim)' }

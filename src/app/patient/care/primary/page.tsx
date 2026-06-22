@@ -40,7 +40,7 @@ export default function PrimaryCarePage() {
           <div style={{ padding: 32, background: 'var(--teal)', borderRadius: 20 }}>
             <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--bg-dark)', marginBottom: 8 }}>Book a visit</h2>
             <p style={{ fontSize: 14, color: 'rgba(11,24,40,0.7)', marginBottom: 24, lineHeight: 1.5 }}>See a board-certified primary care physician today via video visit.</p>
-            <Link href="#" style={{ display: 'inline-block', padding: '12px 24px', background: 'var(--bg-dark)', color: 'var(--teal)', borderRadius: 100, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Schedule now →</Link>
+            <Link href="/patient/care/primary/intake" style={{ display: 'inline-block', padding: '12px 24px', background: 'var(--bg-dark)', color: 'var(--teal)', borderRadius: 100, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Schedule now →</Link>
           </div>
 
           {/* To-do */}

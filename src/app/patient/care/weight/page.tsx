@@ -25,7 +25,7 @@ export default function WeightCarePage() {
               <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 8 }}>Start your GLP-1 program</h2>
               <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', lineHeight: 1.5, maxWidth: 440 }}>Semaglutide (Ozempic/Wegovy) and Tirzepatide prescribed by licensed providers — delivered to your door.</p>
               <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
-                <Link href="#" style={{ padding: '12px 24px', background: 'var(--amber)', color: '#78350F', borderRadius: 100, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Get started →</Link>
+                <Link href="/patient/care/weight/intake" style={{ padding: '12px 24px', background: 'var(--amber)', color: '#78350F', borderRadius: 100, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Get started →</Link>
                 <Link href="#" style={{ padding: '12px 24px', background: 'rgba(255,255,255,0.12)', color: '#fff', borderRadius: 100, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>Learn more</Link>
               </div>
             </div>

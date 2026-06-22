@@ -22,7 +22,7 @@ export default function DermatologyPage() {
           <div style={{ padding: 32, background: 'linear-gradient(135deg, #064E3B, #065F46)', borderRadius: 20 }}>
             <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 8 }}>Submit a skin photo</h2>
             <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', marginBottom: 24, lineHeight: 1.5 }}>Get a diagnosis and treatment plan from a board-certified dermatologist within 24 hours.</p>
-            <Link href="#" style={{ display: 'inline-block', padding: '12px 24px', background: 'var(--green)', color: 'var(--bg-dark)', borderRadius: 100, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Upload photo →</Link>
+            <Link href="/patient/care/dermatology/intake" style={{ display: 'inline-block', padding: '12px 24px', background: 'var(--green)', color: 'var(--bg-dark)', borderRadius: 100, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Upload photo →</Link>
           </div>
 
           {/* Active conditions */}

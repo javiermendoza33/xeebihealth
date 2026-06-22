@@ -22,7 +22,7 @@ export default function WomensHealthPage() {
         <div style={{ padding: 40, background: 'linear-gradient(135deg, #831843, #9D174D)', borderRadius: 20, marginBottom: 24 }}>
           <h2 style={{ fontSize: 24, fontWeight: 700, color: '#fff', marginBottom: 8 }}>Book an OB/GYN visit</h2>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', marginBottom: 24, lineHeight: 1.5, maxWidth: 460 }}>Connect with a board-certified OB/GYN for annual exams, birth control, hormones, and more — via secure video.</p>
-          <Link href="#" style={{ display: 'inline-block', padding: '13px 28px', background: '#F9A8D4', color: '#831843', borderRadius: 100, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Schedule now →</Link>
+          <Link href="/patient/care/womens/intake" style={{ display: 'inline-block', padding: '13px 28px', background: '#F9A8D4', color: '#831843', borderRadius: 100, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Schedule now →</Link>
         </div>
 
         {/* Service cards */}
