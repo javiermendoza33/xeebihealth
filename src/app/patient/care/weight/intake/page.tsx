@@ -36,7 +36,7 @@ const MEDICATIONS = [
 const NAVY = '#1E2B5E'
 const BORDER = '#E5E7EB'
 const MUTED = '#9CA3AF'
-const TOTAL = 9
+const TOTAL = 12
 
 export default function WeightIntakePage() {
   const router = useRouter()
@@ -52,10 +52,20 @@ export default function WeightIntakePage() {
   const [payment, setPayment] = useState('')
 
   const totalInches = (parseInt(heightFt) || 0) * 12 + (parseInt(heightIn) || 0)
-  const bmi = totalInches > 0 && currentWeight
-    ? ((parseInt(currentWeight) / (totalInches * totalInches)) * 703).toFixed(1)
+  const bmiRaw = totalInches > 0 && currentWeight
+    ? (parseInt(currentWeight) / (totalInches * totalInches)) * 703
     : null
+  const bmi = bmiRaw ? bmiRaw.toFixed(1) : null
+  const bmiNum = bmiRaw ?? 0
   const toLose = Math.max(0, parseInt(currentWeight || '0') - parseInt(goalWeight || '0'))
+  const projectedLoss = Math.round(parseInt(currentWeight || '0') * 0.102)
+  const projectedWeight = parseInt(currentWeight || '0') - projectedLoss
+
+  const bmiCategory =
+    bmiNum < 18.5 ? 'Underweight' :
+    bmiNum < 25   ? 'Healthy weight' :
+    bmiNum < 30   ? 'Overweight' : 'Obese'
+  const bmiThumbPct = Math.min(98, Math.max(2, ((bmiNum - 15) / 28) * 100))
 
   const progress = Math.round(((step - 1) / (TOTAL - 1)) * 100)
 
@@ -85,26 +95,32 @@ export default function WeightIntakePage() {
     border: `2px solid ${active ? NAVY : BORDER}`, borderRadius: 16, outline: 'none',
     boxSizing: 'border-box',
   })
-
   const nextBtn = (enabled: boolean): React.CSSProperties => ({
     width: '100%', padding: '18px', fontSize: 16, fontWeight: 600,
     background: enabled ? NAVY : '#E5E7EB', color: enabled ? '#fff' : MUTED,
     border: 'none', borderRadius: 100, cursor: enabled ? 'pointer' : 'not-allowed',
   })
-
   const cardBtn = (selected: boolean): React.CSSProperties => ({
     width: '100%', padding: '20px 24px', marginBottom: 12, textAlign: 'left',
     background: selected ? `${NAVY}0A` : '#fff',
     border: `1.5px solid ${selected ? NAVY : BORDER}`,
     borderRadius: 16, cursor: 'pointer',
   })
-
   const checkBox = (selected: boolean): React.CSSProperties => ({
     width: 20, height: 20, borderRadius: 6, flexShrink: 0,
     border: `2px solid ${selected ? NAVY : '#D1D5DB'}`,
     background: selected ? NAVY : '#fff',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   })
+
+  // SVG projection chart
+  const months = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const chartW = 500, chartH = 240
+  const pL = 64, pR = 20, pT = 24, pB = 52
+  const plotW = chartW - pL - pR
+  const plotH = chartH - pT - pB
+  const x0 = pL, y0 = pT, x1 = chartW - pR, y1 = pT + plotH
+  const curve = `M ${x0} ${y0} C ${x0 + plotW * 0.38} ${y0} ${x0 + plotW * 0.62} ${y1} ${x1} ${y1}`
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
@@ -253,8 +269,167 @@ export default function WeightIntakePage() {
           </div>
         )}
 
-        {/* Step 8 — Payment */}
+        {/* Step 8 — BMI visualization */}
         {step === 8 && (
+          <div>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: NAVY, lineHeight: 1.3, marginBottom: 8 }}>
+              Your BMI is <span style={{ color: bmiNum >= 30 ? '#EF4444' : bmiNum >= 25 ? '#F97316' : '#10B981' }}>{bmi}</span>
+            </h1>
+            <p style={{ fontSize: 15, color: MUTED, marginBottom: 48 }}>This helps your doctor confirm safe dosing ranges.</p>
+
+            {/* Summary row */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 40 }}>
+              {[
+                { label: 'Height', value: `${heightFt}′ ${heightIn}″` },
+                { label: 'Weight', value: `${currentWeight} lbs` },
+                { label: 'Category', value: bmiCategory },
+              ].map(item => (
+                <div key={item.label} style={{ flex: 1, padding: '16px 14px', background: '#F9FAFB', border: `1px solid ${BORDER}`, borderRadius: 14, textAlign: 'center' }}>
+                  <div style={{ fontSize: 12, color: MUTED, marginBottom: 6, fontWeight: 500 }}>{item.label}</div>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: NAVY }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* BMI bar */}
+            <div style={{ marginBottom: 48 }}>
+              <div style={{ fontSize: 13, color: MUTED, marginBottom: 10, display: 'flex', justifyContent: 'space-between' }}>
+                <span>Underweight</span><span>Healthy</span><span>Overweight</span><span>Obese</span>
+              </div>
+              <div style={{ position: 'relative', height: 10, borderRadius: 100, background: 'linear-gradient(to right, #FCD34D 0%, #4ADE80 28%, #4ADE80 45%, #FB923C 62%, #EF4444 100%)' }}>
+                <div style={{
+                  position: 'absolute', top: '50%', transform: 'translate(-50%, -50%)',
+                  left: `${bmiThumbPct}%`,
+                  width: 22, height: 22, borderRadius: '50%',
+                  background: '#fff', border: `3px solid ${NAVY}`,
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+                }} />
+              </div>
+              <div style={{ textAlign: 'center', marginTop: 18, fontSize: 15, color: MUTED }}>
+                Your BMI: <strong style={{ color: NAVY, fontSize: 18 }}>{bmi}</strong>
+              </div>
+            </div>
+
+            <button onClick={goNext} style={nextBtn(true)}>Next</button>
+          </div>
+        )}
+
+        {/* Step 9 — 6-month projection chart */}
+        {step === 9 && (
+          <div>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: NAVY, lineHeight: 1.3, marginBottom: 48 }}>
+              In six months, you could lose <span style={{ color: '#10B981' }}>{projectedLoss} lbs.</span>
+            </h1>
+
+            {/* Chart */}
+            <div style={{ overflowX: 'auto', marginBottom: 32 }}>
+              <svg width={chartW} height={chartH} style={{ display: 'block', maxWidth: '100%' }}>
+                {/* Dashed reference lines */}
+                <line x1={pL} y1={y0} x2={x1 + 8} y2={y0} stroke={BORDER} strokeWidth={1.5} strokeDasharray="5 4" />
+                <line x1={pL} y1={y1} x2={x1 + 8} y2={y1} stroke={BORDER} strokeWidth={1.5} strokeDasharray="5 4" />
+
+                {/* Weight labels */}
+                <text x={pL - 8} y={y0 + 5} textAnchor="end" fontSize={13} fontWeight={600} fill={NAVY} fontFamily="Inter, sans-serif">{currentWeight} lbs</text>
+                <text x={pL - 8} y={y1 + 5} textAnchor="end" fontSize={13} fontWeight={600} fill={NAVY} fontFamily="Inter, sans-serif">{projectedWeight} lbs</text>
+
+                {/* Smooth bezier curve */}
+                <path d={curve} fill="none" stroke="#6B81D4" strokeWidth={3} strokeLinecap="round" />
+
+                {/* Start dot */}
+                <circle cx={x0} cy={y0} r={7} fill="#6B81D4" />
+                {/* End dot */}
+                <circle cx={x1} cy={y1} r={7} fill="#6B81D4" />
+
+                {/* Month labels */}
+                {months.map((m, i) => {
+                  const mx = pL + (plotW / (months.length - 1)) * i
+                  return (
+                    <text key={m} x={mx} y={chartH - 12} textAnchor="middle" fontSize={13} fill={MUTED} fontFamily="Inter, sans-serif">{m}</text>
+                  )
+                })}
+              </svg>
+            </div>
+
+            <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.65, marginBottom: 40 }}>
+              Our members with a similar starting BMI lose an average of 10.2% of body weight in six months. Individual results may vary based on starting BMI and treatment adherence.
+            </p>
+
+            <button onClick={goNext} style={nextBtn(true)}>Next</button>
+          </div>
+        )}
+
+        {/* Step 10 — Ready to start */}
+        {step === 10 && (
+          <div>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: NAVY, lineHeight: 1.3, marginBottom: 8 }}>
+              Your plan is ready.
+            </h1>
+            <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.65, marginBottom: 40 }}>
+              We&apos;ll match you with a provider and a medication plan built around your goals — in six months, you could lose {projectedLoss} lbs.
+            </p>
+
+            {/* What happens next */}
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: NAVY, marginBottom: 14 }}>What happens next</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 40 }}>
+              {[
+                'Meet with a board-certified provider online.',
+                'Start your personalized care plan & medication.',
+                'Unlimited support every step of the way.',
+              ].map((text, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', border: `1px solid ${BORDER}`, borderRadius: 14 }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: `${NAVY}12`, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: NAVY, fontStyle: 'italic' }}>
+                    {i + 1}
+                  </div>
+                  <span style={{ fontSize: 14, color: NAVY }}>{text}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Trust stats */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 40 }}>
+              {[
+                { stat: '50k+', label: 'Members helped' },
+                { stat: '10.2%', label: 'Avg body weight lost' },
+                { stat: '4.8★', label: 'Member satisfaction' },
+              ].map(item => (
+                <div key={item.stat} style={{ flex: 1, padding: '18px 12px', background: '#F9FAFB', borderRadius: 14, textAlign: 'center' }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: NAVY, marginBottom: 4 }}>{item.stat}</div>
+                  <div style={{ fontSize: 12, color: MUTED, lineHeight: 1.4 }}>{item.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Testimonial */}
+            <div style={{ padding: '20px 24px', background: '#F9FAFB', borderRadius: 16, marginBottom: 40, borderLeft: `3px solid ${NAVY}` }}>
+              <p style={{ fontSize: 14, color: NAVY, lineHeight: 1.7, marginBottom: 10, fontStyle: 'italic' }}>
+                &ldquo;I felt heard and supported every step of the way. Down 27 lbs in 5 months.&rdquo;
+              </p>
+              <span style={{ fontSize: 13, fontWeight: 600, color: MUTED }}>— Kristina F., CareMD member</span>
+            </div>
+
+            {/* How membership works */}
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: NAVY, marginBottom: 14 }}>How the membership works</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 40 }}>
+              {[
+                { icon: '🩺', title: 'CareMD Membership', sub: 'Provider visits and unlimited messaging' },
+                { icon: '💊', title: 'Medication orders', sub: 'Billed separately; approval required' },
+              ].map(item => (
+                <div key={item.title} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px', border: `1px solid ${BORDER}`, borderRadius: 14 }}>
+                  <div style={{ fontSize: 22, flexShrink: 0 }}>{item.icon}</div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: NAVY, marginBottom: 2 }}>{item.title}</div>
+                    <div style={{ fontSize: 13, color: MUTED }}>{item.sub}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={goNext} style={nextBtn(true)}>Choose a plan →</button>
+          </div>
+        )}
+
+        {/* Step 11 — Payment */}
+        {step === 11 && (
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 700, color: NAVY, lineHeight: 1.35, marginBottom: 8 }}>How would you like to pay?</h1>
             <p style={{ fontSize: 15, color: MUTED, marginBottom: 40 }}>We accept most major insurance plans and offer affordable self-pay options.</p>
@@ -271,8 +446,8 @@ export default function WeightIntakePage() {
           </div>
         )}
 
-        {/* Step 9 — Plan reveal */}
-        {step === 9 && (
+        {/* Step 12 — Plan reveal */}
+        {step === 12 && (
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 64, marginBottom: 20 }}>🎉</div>
             <h1 style={{ fontSize: 28, fontWeight: 700, color: NAVY, marginBottom: 12 }}>You&apos;re a great fit!</h1>
@@ -285,6 +460,7 @@ export default function WeightIntakePage() {
                 { label: 'Current weight', value: `${currentWeight} lbs` },
                 { label: 'Goal weight', value: `${goalWeight} lbs` },
                 { label: 'To lose', value: `${toLose} lbs` },
+                { label: '6-month projection', value: `−${projectedLoss} lbs` },
                 { label: 'Program', value: 'GLP-1 (Semaglutide or Tirzepatide)' },
                 { label: 'Next step', value: 'Provider consultation' },
               ].map((r, i, arr) => (
