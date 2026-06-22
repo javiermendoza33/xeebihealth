@@ -33,9 +33,9 @@ const SECTIONS = [
 
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar portalLabel="Patient Portal" accentColor="var(--teal)" sections={SECTIONS} />
-      <main className="flex-1 ml-60 flex flex-col min-h-screen" style={{ background: 'var(--bg-dark)' }}>
+    <div className="flex min-h-screen patient-portal">
+      <Sidebar portalLabel="Patient Portal" accentColor="#5B9E82" sections={SECTIONS} variant="light" />
+      <main className="flex-1 ml-60 flex flex-col min-h-screen" style={{ background: '#F4F7F5' }}>
         {children}
       </main>
     </div>

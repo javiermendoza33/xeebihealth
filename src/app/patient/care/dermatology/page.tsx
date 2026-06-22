@@ -13,7 +13,7 @@ export default function DermatologyPage() {
       <div style={{ padding: '40px 48px', maxWidth: 1100 }}>
         <div style={{ marginBottom: 36 }}>
           <p style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--green)', fontWeight: 600, marginBottom: 8 }}>Dermatology</p>
-          <h1 style={{ fontSize: 32, fontWeight: 700, color: '#fff', letterSpacing: -0.5 }}>Your skin care plan</h1>
+          <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--fg)', letterSpacing: -0.5 }}>Your skin care plan</h1>
           <p style={{ color: 'var(--muted)', marginTop: 6, fontSize: 15 }}>Board-certified dermatologists, available via video or photo review.</p>
         </div>
 
@@ -27,13 +27,13 @@ export default function DermatologyPage() {
 
           {/* Active conditions */}
           <div style={{ padding: 32, background: 'var(--card-bg)', border: '1px solid var(--divider)', borderRadius: 20 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 20 }}>Active conditions</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--fg)', marginBottom: 20 }}>Active conditions</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {CONDITIONS.map(c => (
                 <div key={c.label} style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
                   <div style={{ width: 38, height: 38, background: 'rgba(100,200,140,0.12)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{c.icon}</div>
                   <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>{c.label}</p>
+                    <p style={{ fontSize: 14, color: 'var(--fg)', fontWeight: 500 }}>{c.label}</p>
                     <p style={{ fontSize: 12, color: 'var(--green)' }}>{c.status}</p>
                   </div>
                 </div>
@@ -45,7 +45,7 @@ export default function DermatologyPage() {
         {/* Video visit */}
         <div style={{ padding: 28, background: 'var(--card-bg)', border: '1px solid var(--divider)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
           <div>
-            <h3 style={{ fontSize: 17, fontWeight: 600, color: '#fff', marginBottom: 4 }}>Prefer a live video consultation?</h3>
+            <h3 style={{ fontSize: 17, fontWeight: 600, color: 'var(--fg)', marginBottom: 4 }}>Prefer a live video consultation?</h3>
             <p style={{ fontSize: 14, color: 'var(--muted)' }}>Meet a dermatologist face-to-face via secure video visit.</p>
           </div>
           <Link href="#" style={{ padding: '12px 24px', background: 'var(--green)', color: 'var(--bg-dark)', borderRadius: 100, fontSize: 14, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>Book video visit</Link>

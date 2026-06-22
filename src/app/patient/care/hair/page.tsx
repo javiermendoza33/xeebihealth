@@ -13,7 +13,7 @@ export default function HairLossPage() {
       <div style={{ padding: '40px 48px', maxWidth: 1100 }}>
         <div style={{ marginBottom: 36 }}>
           <p style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#A3E635', fontWeight: 600, marginBottom: 8 }}>Hair Loss</p>
-          <h1 style={{ fontSize: 32, fontWeight: 700, color: '#fff', letterSpacing: -0.5 }}>Your hair regrowth plan</h1>
+          <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--fg)', letterSpacing: -0.5 }}>Your hair regrowth plan</h1>
           <p style={{ color: 'var(--muted)', marginTop: 6, fontSize: 15 }}>Clinically proven treatments — prescribed online, delivered to your door.</p>
         </div>
 
@@ -36,7 +36,7 @@ export default function HairLossPage() {
             <div key={t.label} style={{ padding: '28px 24px', background: 'var(--card-bg)', border: '1px solid var(--divider)', borderRadius: 16 }}>
               <div style={{ fontSize: 28, marginBottom: 14 }}>{t.icon}</div>
               <div style={{ display: 'inline-block', padding: '3px 10px', background: 'rgba(163,230,53,0.1)', color: '#A3E635', borderRadius: 100, fontSize: 11, fontWeight: 600, marginBottom: 10 }}>{t.status}</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>{t.label}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--fg)', marginBottom: 6 }}>{t.label}</div>
               <div style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }}>{t.sub}</div>
             </div>
           ))}

@@ -20,7 +20,7 @@ export default function PrimaryCarePage() {
       <div style={{ padding: '40px 48px', maxWidth: 1100 }}>
         <div style={{ marginBottom: 36 }}>
           <p style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--teal)', fontWeight: 600, marginBottom: 8 }}>Primary Care</p>
-          <h1 style={{ fontSize: 32, fontWeight: 700, color: '#fff', letterSpacing: -0.5 }}>Good morning, Javier 👋</h1>
+          <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--fg)', letterSpacing: -0.5 }}>Good morning, Javier 👋</h1>
           <p style={{ color: 'var(--muted)', marginTop: 6, fontSize: 15 }}>Your primary care hub — checkups, prescriptions, and chronic care in one place.</p>
         </div>
 
@@ -38,20 +38,20 @@ export default function PrimaryCarePage() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
           {/* Book visit */}
           <div style={{ padding: 32, background: 'var(--teal)', borderRadius: 20 }}>
-            <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--bg-dark)', marginBottom: 8 }}>Book a visit</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: '#0B1828', marginBottom: 8 }}>Book a visit</h2>
             <p style={{ fontSize: 14, color: 'rgba(11,24,40,0.7)', marginBottom: 24, lineHeight: 1.5 }}>See a board-certified primary care physician today via video visit.</p>
-            <Link href="/patient/care/primary/intake" style={{ display: 'inline-block', padding: '12px 24px', background: 'var(--bg-dark)', color: 'var(--teal)', borderRadius: 100, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Schedule now →</Link>
+            <Link href="/patient/care/primary/intake" style={{ display: 'inline-block', padding: '12px 24px', background: '#0B1828', color: 'var(--teal)', borderRadius: 100, fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>Schedule now →</Link>
           </div>
 
           {/* To-do */}
           <div style={{ padding: 32, background: 'var(--card-bg)', border: '1px solid var(--divider)', borderRadius: 20 }}>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 20 }}>Action items</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--fg)', marginBottom: 20 }}>Action items</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {TASKS.map(t => (
                 <div key={t.label} style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                  <div style={{ width: 38, height: 38, background: 'var(--bg-dark)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{t.icon}</div>
+                  <div style={{ width: 38, height: 38, background: 'rgba(126,207,207,0.12)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>{t.icon}</div>
                   <div>
-                    <p style={{ fontSize: 14, color: '#fff', fontWeight: 500 }}>{t.label}</p>
+                    <p style={{ fontSize: 14, color: 'var(--fg)', fontWeight: 500 }}>{t.label}</p>
                     <p style={{ fontSize: 12, color: 'var(--teal)' }}>{t.due}</p>
                   </div>
                 </div>

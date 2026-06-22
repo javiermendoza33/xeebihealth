@@ -14,7 +14,7 @@ export default function LongevityPage() {
       <div style={{ padding: '40px 48px', maxWidth: 1100 }}>
         <div style={{ marginBottom: 36 }}>
           <p style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#C084FC', fontWeight: 600, marginBottom: 8 }}>Longevity</p>
-          <h1 style={{ fontSize: 32, fontWeight: 700, color: '#fff', letterSpacing: -0.5 }}>Live longer, live better</h1>
+          <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--fg)', letterSpacing: -0.5 }}>Live longer, live better</h1>
           <p style={{ color: 'var(--muted)', marginTop: 6, fontSize: 15 }}>Science-backed preventive care to optimize your healthspan.</p>
         </div>
 
@@ -36,7 +36,7 @@ export default function LongevityPage() {
           {PANELS.map(p => (
             <div key={p.label} style={{ padding: '24px 20px', background: 'var(--card-bg)', border: '1px solid var(--divider)', borderRadius: 16 }}>
               <div style={{ fontSize: 26, marginBottom: 12 }}>{p.icon}</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 6 }}>{p.label}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', marginBottom: 6 }}>{p.label}</div>
               <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5, marginBottom: 16 }}>{p.sub}</div>
               <div style={{ fontSize: 13, color: '#C084FC', fontWeight: 600 }}>{p.cta} →</div>
             </div>

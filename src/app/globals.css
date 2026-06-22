@@ -10,6 +10,22 @@
   --divider: #1A2E42;
   --green: #64C88C;
   --amber: #F79E3C;
+  --fg: #ffffff;
+}
+
+/* Patient portal — warm light theme */
+.patient-portal {
+  --bg-dark: #F4F7F5;
+  --sidebar-bg: #F5F0E8;
+  --card-bg: #FFFFFF;
+  --divider: #E2ECE7;
+  --muted: #7A9386;
+  --teal-dim: #EBF5EF;
+  --fg: #1C2D26;
+}
+
+.patient-portal .text-white {
+  color: var(--fg);
 }
 
 * { box-sizing: border-box; }

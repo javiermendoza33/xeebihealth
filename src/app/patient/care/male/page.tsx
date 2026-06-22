@@ -14,7 +14,7 @@ export default function MaleSexualHealthPage() {
       <div style={{ padding: '40px 48px', maxWidth: 1100 }}>
         <div style={{ marginBottom: 36 }}>
           <p style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#60A5FA', fontWeight: 600, marginBottom: 8 }}>Male Sexual Health</p>
-          <h1 style={{ fontSize: 32, fontWeight: 700, color: '#fff', letterSpacing: -0.5 }}>Your men&apos;s health hub</h1>
+          <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--fg)', letterSpacing: -0.5 }}>Your men&apos;s health hub</h1>
           <p style={{ color: 'var(--muted)', marginTop: 6, fontSize: 15 }}>Discreet, effective care for ED, testosterone, and more — all online.</p>
         </div>
 
@@ -31,7 +31,7 @@ export default function MaleSexualHealthPage() {
             <Link key={s.label} href={s.href}
               style={{ padding: '24px 20px', background: 'var(--card-bg)', border: '1px solid var(--divider)', borderRadius: 16, textDecoration: 'none', display: 'block' }}>
               <div style={{ fontSize: 26, marginBottom: 12 }}>{s.icon}</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 6 }}>{s.label}</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', marginBottom: 6 }}>{s.label}</div>
               <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>{s.sub}</div>
               <div style={{ marginTop: 16, fontSize: 13, color: '#60A5FA', fontWeight: 600 }}>Get started →</div>
             </Link>
