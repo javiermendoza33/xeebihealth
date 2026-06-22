@@ -26,10 +26,12 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error && data.user) {
       const { data: profile } = await supabase
-        .from('profiles').select('role').eq('id', data.user.id).single()
+        .from('profiles').select('role, full_name').eq('id', data.user.id).single()
       const role = profile?.role ?? 'patient'
       if (role === 'doctor') return NextResponse.redirect(`${origin}/doctor/dashboard`)
       if (role === 'admin') return NextResponse.redirect(`${origin}/admin/dashboard`)
+      // New patient (no name set) → onboarding
+      if (!profile?.full_name) return NextResponse.redirect(`${origin}/onboarding`)
       return NextResponse.redirect(`${origin}/patient/dashboard`)
     }
   }
