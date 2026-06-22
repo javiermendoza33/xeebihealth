@@ -48,14 +48,14 @@ export default function HomePage() {
             alt="Happy couple after telehealth visit"
             fill
             priority
-            style={{ objectFit: 'cover', objectPosition: 'center top', opacity: 0.55, filter: 'brightness(0.85) saturate(0.7)' }}
+            style={{ objectFit: 'cover', objectPosition: 'center top', opacity: 0.75, filter: 'brightness(1.0) saturate(0.8)' }}
           />
           {/* Fade left into dark bg */}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, var(--bg-dark) 0%, rgba(11,24,40,0.6) 30%, rgba(11,24,40,0) 65%)' }} />
           {/* Fade top */}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, var(--bg-dark) 0%, rgba(11,24,40,0) 15%, rgba(11,24,40,0) 80%, rgba(11,24,40,0.6) 100%)' }} />
           {/* Teal tint for brand cohesion */}
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(7,16,24,0.28)' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(7,16,24,0.12)' }} />
         </div>
 
         <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '80px 0 80px 72px', maxWidth: 620 }}>
