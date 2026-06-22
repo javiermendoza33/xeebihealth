@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
-const TOTAL = 5
+const TOTAL = 6
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
 const US_STATES = [
   'Alabama','Alaska','Arizona','Arkansas','California','Colorado','Connecticut',
@@ -18,43 +20,57 @@ const US_STATES = [
   'Virginia','Washington','West Virginia','Wisconsin','Wyoming',
 ]
 
-const SPECIALTIES = [
-  { icon: '🫀', label: 'Primary Care' },
-  { icon: '🧠', label: 'Mental Health' },
-  { icon: '🌿', label: 'Dermatology' },
-  { icon: '🚨', label: 'Urgent Care' },
-  { icon: '🌸', label: "Women's Health" },
-  { icon: '🥗', label: 'Weight Care' },
+const CARE_TYPES = [
+  { key: 'primary',      icon: '🫀', label: 'Primary Care',    sub: 'Checkups, prescriptions, chronic care' },
+  { key: 'mental',       icon: '🧠', label: 'Mental Health',   sub: 'Therapy, psychiatry, anxiety & more' },
+  { key: 'dermatology',  icon: '🌿', label: 'Dermatology',     sub: 'Acne, eczema, hair loss, skincare' },
+  { key: 'urgent',       icon: '🚨', label: 'Urgent Care',     sub: 'Infections, rashes, seen fast' },
+  { key: 'womens',       icon: '🌸', label: "Women's Health",  sub: 'Birth control, hormones, OB/GYN' },
+  { key: 'weight',       icon: '🥗', label: 'Weight Care',     sub: 'GLP-1, nutrition, weight management' },
 ]
+
+const sel: React.CSSProperties = { borderColor: 'var(--teal)', background: 'var(--teal-dim)' }
+const unsel: React.CSSProperties = { borderColor: 'var(--divider)', background: 'var(--card-bg)' }
 
 export default function OnboardingPage() {
   const router = useRouter()
   const [step, setStep] = useState(1)
-  const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
 
-  // Step 1 — Name
+  // Step 1
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName]   = useState('')
-
-  // Step 2 — DOB
+  // Step 2
   const [month, setMonth] = useState('')
   const [day,   setDay]   = useState('')
   const [year,  setYear]  = useState('')
+  // Step 3
+  const [phone, setPhone]         = useState('')
+  const [smsUpdates, setSmsUpdates] = useState(false)
+  const [smsPromo, setSmsPromo]   = useState(false)
+  // Step 4
+  const [gender, setGender] = useState('')
+  // Step 5
+  const [state, setState]   = useState('')
+  // Step 6
+  const [careTypes, setCareTypes] = useState<string[]>([])
 
-  // Step 3 — Specialty
-  const [specialty, setSpecialty] = useState('')
+  function toggleCare(key: string) {
+    setCareTypes(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key])
+  }
 
-  // Step 4 — State
-  const [state, setState] = useState('')
+  function formatPhone(raw: string) {
+    const digits = raw.replace(/\D/g, '').slice(0, 10)
+    if (digits.length <= 3) return digits
+    if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`
+    return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`
+  }
 
-  // Step 5 — Insurance
-  const [insurance, setInsurance] = useState('')
-
-  function next() { setStep(s => Math.min(s + 1, TOTAL)) }
-  function back() { setStep(s => Math.max(s - 1, 1)) }
+  const next = () => setStep(s => Math.min(s + 1, TOTAL))
+  const back = () => setStep(s => Math.max(s - 1, 1))
 
   async function finish() {
-    setLoading(true)
+    setSaving(true)
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
@@ -63,225 +79,213 @@ export default function OnboardingPage() {
         full_name: `${firstName} ${lastName}`,
         email: user.email,
         role: 'patient',
+        gender,
+        state,
+        care_type: careTypes[0] ?? 'primary',
+        phone: phone.replace(/\D/g,''),
       })
     }
-    router.push('/patient/dashboard')
+    const primary = careTypes[0] ?? 'primary'
+    router.push(`/patient/care/${primary}`)
   }
 
-  // Shared input style
-  const inputBase: React.CSSProperties = {
+  // Shared styles
+  const inp: React.CSSProperties = {
     width: '100%', padding: '16px 20px', background: 'var(--card-bg)',
-    border: '1px solid var(--divider)', borderRadius: 14, fontSize: 16,
+    border: '1px solid var(--divider)', borderRadius: 100, fontSize: 16,
     color: '#fff', outline: 'none', boxSizing: 'border-box',
   }
+  const btn = (active: boolean): React.CSSProperties => ({
+    width: '100%', marginTop: 32, padding: '17px', border: 'none', borderRadius: 100,
+    fontSize: 16, fontWeight: 700, cursor: active ? 'pointer' : 'not-allowed', transition: 'all 0.2s',
+    background: active ? 'var(--teal)' : 'var(--divider)',
+    color: active ? 'var(--bg-dark)' : 'var(--muted)',
+  })
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg-dark)', display: 'flex', flexDirection: 'column' }}>
 
       {/* Top bar */}
-      <div style={{ height: 72, display: 'flex', alignItems: 'center', padding: '0 48px', gap: 20, borderBottom: '1px solid var(--divider)' }}>
-        {step > 1 ? (
-          <button onClick={back} style={{ width: 38, height: 38, borderRadius: '50%', border: '1px solid var(--divider)', background: 'none', color: 'var(--muted)', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            ←
-          </button>
-        ) : (
-          <Link href="/" style={{ width: 38, height: 38, borderRadius: '50%', border: '1px solid var(--divider)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 18, textDecoration: 'none', flexShrink: 0 }}>
-            ←
-          </Link>
-        )}
-
-        {/* Progress bar */}
+      <div style={{ height: 68, display: 'flex', alignItems: 'center', padding: '0 48px', gap: 20, borderBottom: '1px solid var(--divider)', flexShrink: 0 }}>
+        {step > 1
+          ? <button onClick={back} style={{ width: 36, height: 36, borderRadius: '50%', border: '1px solid var(--divider)', background: 'none', color: 'var(--muted)', fontSize: 18, cursor: 'pointer', flexShrink: 0 }}>←</button>
+          : <Link href="/" style={{ width: 36, height: 36, borderRadius: '50%', border: '1px solid var(--divider)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 18, textDecoration: 'none', flexShrink: 0 }}>←</Link>
+        }
         <div style={{ flex: 1, height: 5, background: 'var(--divider)', borderRadius: 3, overflow: 'hidden' }}>
           <div style={{ height: '100%', width: `${(step / TOTAL) * 100}%`, background: 'var(--teal)', borderRadius: 3, transition: 'width 0.4s ease' }} />
         </div>
-
-        {/* Logo */}
         <Link href="/" style={{ textDecoration: 'none', fontSize: 20, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
           <em style={{ fontStyle: 'italic', fontWeight: 400, color: 'var(--teal)' }}>Care</em>MD
         </Link>
       </div>
 
-      {/* Content */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px' }}>
+      {/* Body */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '48px 24px' }}>
         <div style={{ width: '100%', maxWidth: 560 }}>
 
           {/* ── Step 1: Name ── */}
           {step === 1 && (
             <div>
-              <p style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--teal)', fontWeight: 600, marginBottom: 16 }}>Step 1 of {TOTAL}</p>
-              <h1 style={{ fontSize: 36, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 10, lineHeight: 1.15 }}>
+              <h1 style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 40, lineHeight: 1.15 }}>
                 What is your first and last name?
               </h1>
-              <p style={{ fontSize: 15, color: 'var(--muted)', marginBottom: 40, lineHeight: 1.6 }}>
-                We'll use this for your care profile and any prescriptions.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--muted)', marginBottom: 8 }}>First name</label>
-                  <input
-                    autoFocus type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
-                    placeholder="First name" style={inputBase}
-                    onFocus={e => e.target.style.borderColor = 'var(--teal)'}
-                    onBlur={e => e.target.style.borderColor = 'var(--divider)'}
-                    onKeyDown={e => e.key === 'Enter' && firstName && lastName && next()}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--muted)', marginBottom: 8 }}>Last name</label>
-                  <input
-                    type="text" value={lastName} onChange={e => setLastName(e.target.value)}
-                    placeholder="Last name" style={inputBase}
-                    onFocus={e => e.target.style.borderColor = 'var(--teal)'}
-                    onBlur={e => e.target.style.borderColor = 'var(--divider)'}
-                    onKeyDown={e => e.key === 'Enter' && firstName && lastName && next()}
-                  />
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <input autoFocus type="text" value={firstName} onChange={e => setFirstName(e.target.value)}
+                  placeholder="First name" style={inp}
+                  onFocus={e => e.target.style.borderColor='var(--teal)'}
+                  onBlur={e => e.target.style.borderColor='var(--divider)'}
+                  onKeyDown={e => e.key==='Enter' && firstName && lastName && next()}
+                />
+                <input type="text" value={lastName} onChange={e => setLastName(e.target.value)}
+                  placeholder="Last name" style={inp}
+                  onFocus={e => e.target.style.borderColor='var(--teal)'}
+                  onBlur={e => e.target.style.borderColor='var(--divider)'}
+                  onKeyDown={e => e.key==='Enter' && firstName && lastName && next()}
+                />
               </div>
-              <button
-                onClick={next} disabled={!firstName.trim() || !lastName.trim()}
-                style={{ width: '100%', marginTop: 32, padding: '16px', background: firstName && lastName ? 'var(--teal)' : 'var(--divider)', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, color: firstName && lastName ? 'var(--bg-dark)' : 'var(--muted)', cursor: firstName && lastName ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}
-              >
-                Next
-              </button>
+              <button onClick={next} disabled={!firstName.trim() || !lastName.trim()} style={btn(!!(firstName && lastName))}>Next</button>
             </div>
           )}
 
           {/* ── Step 2: DOB ── */}
           {step === 2 && (
             <div>
-              <p style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--teal)', fontWeight: 600, marginBottom: 16 }}>Step 2 of {TOTAL}</p>
-              <h1 style={{ fontSize: 36, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 10, lineHeight: 1.15 }}>
-                When were you born?
+              <h1 style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 40, lineHeight: 1.15 }}>
+                What is your date of birth?
               </h1>
-              <p style={{ fontSize: 15, color: 'var(--muted)', marginBottom: 40, lineHeight: 1.6 }}>
-                Your date of birth helps us verify eligibility and match you with the right provider.
-              </p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1.4fr', gap: 12 }}>
-                {[
-                  { label: 'Month', value: month, set: setMonth, placeholder: 'MM', maxLen: 2 },
-                  { label: 'Day',   value: day,   set: setDay,   placeholder: 'DD', maxLen: 2 },
-                  { label: 'Year',  value: year,  set: setYear,  placeholder: 'YYYY', maxLen: 4 },
-                ].map(f => (
-                  <div key={f.label}>
-                    <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--muted)', marginBottom: 8 }}>{f.label}</label>
-                    <input
-                      type="text" inputMode="numeric" value={f.value} maxLength={f.maxLen}
-                      onChange={e => f.set(e.target.value.replace(/\D/g,''))}
-                      placeholder={f.placeholder} style={{ ...inputBase, textAlign: 'center' }}
-                      onFocus={e => e.target.style.borderColor = 'var(--teal)'}
-                      onBlur={e => e.target.style.borderColor = 'var(--divider)'}
-                    />
-                  </div>
-                ))}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1.4fr', gap: 12 }}>
+                <div style={{ position: 'relative' }}>
+                  <select value={month} onChange={e => setMonth(e.target.value)}
+                    style={{ ...inp, appearance: 'none', cursor: 'pointer', color: month ? '#fff' : 'var(--muted)' }}
+                    onFocus={e => e.target.style.borderColor='var(--teal)'}
+                    onBlur={e => e.target.style.borderColor='var(--divider)'}
+                  >
+                    <option value="" disabled>Select a month</option>
+                    {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                  <span style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', pointerEvents: 'none' }}>▾</span>
+                </div>
+                <input type="text" inputMode="numeric" value={day} maxLength={2}
+                  onChange={e => setDay(e.target.value.replace(/\D/g,''))}
+                  placeholder="DD" style={{ ...inp, textAlign: 'center' }}
+                  onFocus={e => e.target.style.borderColor='var(--teal)'}
+                  onBlur={e => e.target.style.borderColor='var(--divider)'}
+                />
+                <input type="text" inputMode="numeric" value={year} maxLength={4}
+                  onChange={e => setYear(e.target.value.replace(/\D/g,''))}
+                  placeholder="YYYY" style={{ ...inp, textAlign: 'center' }}
+                  onFocus={e => e.target.style.borderColor='var(--teal)'}
+                  onBlur={e => e.target.style.borderColor='var(--divider)'}
+                />
               </div>
-              <button
-                onClick={next} disabled={!month || !day || year.length < 4}
-                style={{ width: '100%', marginTop: 32, padding: '16px', background: month && day && year.length===4 ? 'var(--teal)' : 'var(--divider)', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, color: month && day && year.length===4 ? 'var(--bg-dark)' : 'var(--muted)', cursor: month && day && year.length===4 ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}
-              >
-                Next
-              </button>
+              <button onClick={next} disabled={!month || !day || year.length < 4} style={btn(!!(month && day && year.length === 4))}>Next</button>
             </div>
           )}
 
-          {/* ── Step 3: Specialty ── */}
+          {/* ── Step 3: Phone ── */}
           {step === 3 && (
             <div>
-              <p style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--teal)', fontWeight: 600, marginBottom: 16 }}>Step 3 of {TOTAL}</p>
-              <h1 style={{ fontSize: 36, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 10, lineHeight: 1.15 }}>
-                What brings you in today?
+              <h1 style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 40, lineHeight: 1.15 }}>
+                What is your phone number?
               </h1>
-              <p style={{ fontSize: 15, color: 'var(--muted)', marginBottom: 32, lineHeight: 1.6 }}>Choose the area you need help with.</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                {SPECIALTIES.map(s => (
-                  <button
-                    key={s.label} onClick={() => setSpecialty(s.label)}
-                    style={{ padding: '20px', background: specialty === s.label ? 'var(--teal-dim)' : 'var(--card-bg)', border: `1.5px solid ${specialty === s.label ? 'var(--teal)' : 'var(--divider)'}`, borderRadius: 14, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}
-                  >
-                    <div style={{ fontSize: 26, marginBottom: 10 }}>{s.icon}</div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: specialty === s.label ? 'var(--teal)' : '#fff' }}>{s.label}</div>
+              <input type="tel" inputMode="tel" value={phone}
+                onChange={e => setPhone(formatPhone(e.target.value))}
+                placeholder="Phone Number" style={inp}
+                onFocus={e => e.target.style.borderColor='var(--teal)'}
+                onBlur={e => e.target.style.borderColor='var(--divider)'}
+              />
+
+              {/* SMS opt-ins */}
+              <div style={{ marginTop: 28, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {[
+                  { val: smsUpdates, set: setSmsUpdates, label: 'I agree to receive order and account updates via SMS from CareMD.' },
+                  { val: smsPromo,   set: setSmsPromo,   label: 'I agree to receive promotional messages via SMS from CareMD.' },
+                ].map((item, i) => (
+                  <button key={i} onClick={() => item.set(!item.val)}
+                    style={{ display: 'flex', alignItems: 'flex-start', gap: 14, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}>
+                    <div style={{ width: 22, height: 22, borderRadius: 6, border: `2px solid ${item.val ? 'var(--teal)' : 'var(--divider)'}`, background: item.val ? 'var(--teal)' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, transition: 'all 0.15s' }}>
+                      {item.val && <span style={{ color: 'var(--bg-dark)', fontSize: 13, fontWeight: 700 }}>✓</span>}
+                    </div>
+                    <span style={{ fontSize: 14, color: 'var(--muted)', lineHeight: 1.5 }}>{item.label}</span>
                   </button>
                 ))}
               </div>
-              <button
-                onClick={next} disabled={!specialty}
-                style={{ width: '100%', marginTop: 24, padding: '16px', background: specialty ? 'var(--teal)' : 'var(--divider)', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, color: specialty ? 'var(--bg-dark)' : 'var(--muted)', cursor: specialty ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}
-              >
-                Next
-              </button>
+
+              {/* Legal */}
+              <p style={{ marginTop: 32, fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
+                Message frequency varies. Message and data rates may apply. Reply STOP to cancel, HELP for help. See our{' '}
+                <a href="#" style={{ color: 'var(--teal)', textDecoration: 'none' }}>Terms & Conditions</a> and{' '}
+                <a href="#" style={{ color: 'var(--teal)', textDecoration: 'none' }}>Privacy Policy</a>.
+              </p>
+
+              <button onClick={next} style={btn(true)}>Next</button>
             </div>
           )}
 
-          {/* ── Step 4: State ── */}
+          {/* ── Step 4: Gender ── */}
           {step === 4 && (
             <div>
-              <p style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--teal)', fontWeight: 600, marginBottom: 16 }}>Step 4 of {TOTAL}</p>
-              <h1 style={{ fontSize: 36, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 10, lineHeight: 1.15 }}>
-                Where are you located?
+              <h1 style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 40, lineHeight: 1.15 }}>
+                What is your birth-assigned gender?
               </h1>
-              <p style={{ fontSize: 15, color: 'var(--muted)', marginBottom: 40, lineHeight: 1.6 }}>
-                Providers are licensed by state. We'll match you with someone in your area.
-              </p>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--muted)', marginBottom: 8 }}>State</label>
-                <select
-                  value={state} onChange={e => setState(e.target.value)}
-                  style={{ ...inputBase, appearance: 'none', backgroundImage: 'none', cursor: 'pointer' }}
-                  onFocus={e => e.target.style.borderColor = 'var(--teal)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--divider)'}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {['Female', 'Male'].map(g => (
+                  <button key={g} onClick={() => { setGender(g); next() }}
+                    style={{ width: '100%', padding: '22px', border: `1.5px solid ${gender === g ? 'var(--teal)' : 'var(--divider)'}`, borderRadius: 100, background: gender === g ? 'var(--teal-dim)' : 'var(--card-bg)', fontSize: 17, fontWeight: 600, color: gender === g ? 'var(--teal)' : '#fff', cursor: 'pointer', transition: 'all 0.15s', textAlign: 'center' }}>
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 5: State ── */}
+          {step === 5 && (
+            <div>
+              <h1 style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 40, lineHeight: 1.15 }}>
+                What state do you live in?
+              </h1>
+              <div style={{ position: 'relative' }}>
+                <select value={state} onChange={e => setState(e.target.value)}
+                  style={{ ...inp, appearance: 'none', cursor: 'pointer', color: state ? '#fff' : 'var(--muted)' }}
+                  onFocus={e => e.target.style.borderColor='var(--teal)'}
+                  onBlur={e => e.target.style.borderColor='var(--divider)'}
                 >
-                  <option value="">Select your state</option>
+                  <option value="" disabled>State</option>
                   {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
+                <span style={{ position: 'absolute', right: 20, top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', pointerEvents: 'none' }}>▾</span>
               </div>
-              <p style={{ marginTop: 16, fontSize: 12, color: 'var(--muted)' }}>🔒 Used only to match you with licensed providers.</p>
-              <button
-                onClick={next} disabled={!state}
-                style={{ width: '100%', marginTop: 32, padding: '16px', background: state ? 'var(--teal)' : 'var(--divider)', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, color: state ? 'var(--bg-dark)' : 'var(--muted)', cursor: state ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}
-              >
-                Next
+              <button onClick={next} disabled={!state} style={btn(!!state)}>Next</button>
+            </div>
+          )}
+
+          {/* ── Step 6: Care type ── */}
+          {step === 6 && (
+            <div>
+              <h1 style={{ fontSize: 38, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 10, lineHeight: 1.15 }}>
+                What kinds of care are you interested in?
+              </h1>
+              <p style={{ fontSize: 15, color: 'var(--muted)', marginBottom: 32 }}>Select all that apply.</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                {CARE_TYPES.map(c => {
+                  const active = careTypes.includes(c.key)
+                  return (
+                    <button key={c.key} onClick={() => toggleCare(c.key)}
+                      style={{ padding: '22px 18px', borderRadius: 16, border: `1.5px solid ${active ? 'var(--teal)' : 'var(--divider)'}`, background: active ? 'var(--teal-dim)' : 'var(--card-bg)', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}>
+                      <div style={{ fontSize: 32, marginBottom: 12 }}>{c.icon}</div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: active ? 'var(--teal)' : '#fff', marginBottom: 4 }}>{c.label}</div>
+                      <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>{c.sub}</div>
+                    </button>
+                  )
+                })}
+              </div>
+              <button onClick={finish} disabled={careTypes.length === 0 || saving} style={btn(careTypes.length > 0 && !saving)}>
+                {saving ? 'Setting up your profile…' : "Let's go →"}
               </button>
             </div>
           )}
 
-          {/* ── Step 5: Insurance ── */}
-          {step === 5 && (
-            <div>
-              <p style={{ fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--teal)', fontWeight: 600, marginBottom: 16 }}>Step 5 of {TOTAL}</p>
-              <h1 style={{ fontSize: 36, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 10, lineHeight: 1.15 }}>
-                How will you pay for care?
-              </h1>
-              <p style={{ fontSize: 15, color: 'var(--muted)', marginBottom: 32, lineHeight: 1.6 }}>
-                No insurance? No problem — visits start at $49.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {[
-                  { value: 'insurance', icon: '🏥', label: 'I have insurance', sub: "We'll verify your coverage" },
-                  { value: 'self-pay',  icon: '💳', label: 'Self-pay',         sub: 'Transparent pricing, no surprise bills' },
-                  { value: 'employer',  icon: '🏢', label: 'Employer plan',    sub: 'Check if your employer covers CareMD' },
-                ].map(opt => (
-                  <button
-                    key={opt.value} onClick={() => setInsurance(opt.value)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '20px 24px', background: insurance === opt.value ? 'var(--teal-dim)' : 'var(--card-bg)', border: `1.5px solid ${insurance === opt.value ? 'var(--teal)' : 'var(--divider)'}`, borderRadius: 14, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s' }}
-                  >
-                    <span style={{ fontSize: 28, flexShrink: 0 }}>{opt.icon}</span>
-                    <div>
-                      <div style={{ fontSize: 15, fontWeight: 600, color: insurance === opt.value ? 'var(--teal)' : '#fff', marginBottom: 3 }}>{opt.label}</div>
-                      <div style={{ fontSize: 13, color: 'var(--muted)' }}>{opt.sub}</div>
-                    </div>
-                    {insurance === opt.value && (
-                      <div style={{ marginLeft: 'auto', width: 22, height: 22, borderRadius: '50%', background: 'var(--teal)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'var(--bg-dark)', fontWeight: 700, flexShrink: 0 }}>✓</div>
-                    )}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={finish} disabled={!insurance || loading}
-                style={{ width: '100%', marginTop: 28, padding: '16px', background: insurance && !loading ? 'var(--teal)' : 'var(--divider)', border: 'none', borderRadius: 14, fontSize: 16, fontWeight: 700, color: insurance && !loading ? 'var(--bg-dark)' : 'var(--muted)', cursor: insurance && !loading ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}
-              >
-                {loading ? 'Setting up your profile…' : "Let's go →"}
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
