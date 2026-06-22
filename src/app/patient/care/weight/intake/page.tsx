@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 
 const CONDITIONS = [
@@ -58,14 +58,100 @@ export default function WeightIntakePage() {
   const bmi = bmiRaw ? bmiRaw.toFixed(1) : null
   const bmiNum = bmiRaw ?? 0
   const toLose = Math.max(0, parseInt(currentWeight || '0') - parseInt(goalWeight || '0'))
-  const projectedLoss = Math.round(parseInt(currentWeight || '0') * 0.102)
-  const projectedWeight = parseInt(currentWeight || '0') - projectedLoss
 
   const bmiCategory =
     bmiNum < 18.5 ? 'Underweight' :
     bmiNum < 25   ? 'Healthy weight' :
     bmiNum < 30   ? 'Overweight' : 'Obese'
+  const bmiColor =
+    bmiNum < 18.5 ? '#F59E0B' :
+    bmiNum < 25   ? '#10B981' :
+    bmiNum < 30   ? '#F97316' : '#EF4444'
   const bmiThumbPct = Math.min(98, Math.max(2, ((bmiNum - 15) / 28) * 100))
+
+  // ── Personalized projection calculator ──────────────────────────────────────
+  const calc = useMemo(() => {
+    const cw = parseInt(currentWeight || '0')
+    const gw = parseInt(goalWeight || '0')
+    if (!cw) return null
+
+    // Base monthly loss rate (GLP-1 avg: ~1.7% per month)
+    let monthlyRate = 0.017
+
+    // Timeline modifier
+    if (timeline === 'fast') monthlyRate = 0.022
+    else if (timeline === 'steady') monthlyRate = 0.013
+
+    // Previous GLP-1 tolerance → slightly slower initial response
+    if (prevMeds === 'Yes') monthlyRate *= 0.93
+
+    // Conditions that improve GLP-1 response
+    const highResponse = ['Prediabetes', 'Type 2 diabetes', 'Metabolic syndrome', 'Polycystic ovary syndrome (PCOS)']
+    if (conditions.some(c => highResponse.includes(c))) monthlyRate *= 1.07
+
+    // Compute monthly weights over 12 months
+    const monthlyWeights: number[] = [cw]
+    for (let m = 1; m <= 12; m++) {
+      monthlyWeights.push(Math.round(monthlyWeights[m - 1] * (1 - monthlyRate)))
+    }
+
+    const proj6mo = monthlyWeights[6]
+    const loss6mo = cw - proj6mo
+    const weeklyLbs = Math.round((cw * monthlyRate / 4.33) * 10) / 10
+
+    // Months to reach goal weight
+    let monthsToGoal = 0
+    if (gw > 0 && gw < cw) {
+      for (let m = 1; m <= 48; m++) {
+        if (monthlyWeights[m] !== undefined) {
+          if (monthlyWeights[m] <= gw) { monthsToGoal = m; break }
+        } else {
+          const extraMonths = m - 12
+          const wAtM = monthlyWeights[12] * Math.pow(1 - monthlyRate, extraMonths)
+          if (wAtM <= gw) { monthsToGoal = m; break }
+        }
+      }
+    }
+
+    // Label for timeline choice
+    const timelineLabel =
+      timeline === 'fast' ? 'Accelerated' :
+      timeline === 'steady' ? 'Steady & sustainable' : 'Provider-guided'
+
+    return { proj6mo, loss6mo, weeklyLbs, monthlyWeights, monthsToGoal, timelineLabel }
+  }, [currentWeight, goalWeight, timeline, prevMeds, conditions])
+
+  // SVG chart helpers (step 9)
+  const chartPoints = useMemo(() => {
+    if (!calc) return []
+    const cw = parseInt(currentWeight || '0')
+    const months = calc.monthlyWeights.slice(0, 7)
+    const minW = Math.min(...months) - 2
+    const maxW = Math.max(...months) + 2
+    const pL = 64, pT = 24, plotW = 460, plotH = 170
+    return months.map((w, i) => ({
+      x: pL + (i / 6) * plotW,
+      y: pT + (1 - (w - minW) / (maxW - minW)) * plotH,
+      w,
+    }))
+  }, [calc, currentWeight])
+
+  function smoothPath(pts: { x: number; y: number }[]) {
+    if (pts.length < 2) return ''
+    let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[Math.max(0, i - 1)]
+      const p1 = pts[i]
+      const p2 = pts[i + 1]
+      const p3 = pts[Math.min(pts.length - 1, i + 2)]
+      const cp1x = p1.x + (p2.x - p0.x) / 6
+      const cp1y = p1.y + (p2.y - p0.y) / 6
+      const cp2x = p2.x - (p3.x - p1.x) / 6
+      const cp2y = p2.y - (p3.y - p1.y) / 6
+      d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)} ${cp2x.toFixed(1)} ${cp2y.toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`
+    }
+    return d
+  }
 
   const progress = Math.round(((step - 1) / (TOTAL - 1)) * 100)
 
@@ -112,15 +198,6 @@ export default function WeightIntakePage() {
     background: selected ? NAVY : '#fff',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
   })
-
-  // SVG projection chart
-  const months = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-  const chartW = 500, chartH = 240
-  const pL = 64, pR = 20, pT = 24, pB = 52
-  const plotW = chartW - pL - pR
-  const plotH = chartH - pT - pB
-  const x0 = pL, y0 = pT, x1 = chartW - pR, y1 = pT + plotH
-  const curve = `M ${x0} ${y0} C ${x0 + plotW * 0.38} ${y0} ${x0 + plotW * 0.62} ${y1} ${x1} ${y1}`
 
   return (
     <div style={{ minHeight: '100vh', background: '#fff', display: 'flex', flexDirection: 'column' }}>
@@ -273,7 +350,7 @@ export default function WeightIntakePage() {
         {step === 8 && (
           <div>
             <h1 style={{ fontSize: 28, fontWeight: 700, color: NAVY, lineHeight: 1.3, marginBottom: 8 }}>
-              Your BMI is <span style={{ color: bmiNum >= 30 ? '#EF4444' : bmiNum >= 25 ? '#F97316' : '#10B981' }}>{bmi}</span>
+              Your BMI is <span style={{ color: bmiColor }}>{bmi}</span>
             </h1>
             <p style={{ fontSize: 15, color: MUTED, marginBottom: 48 }}>This helps your doctor confirm safe dosing ranges.</p>
 
@@ -314,44 +391,98 @@ export default function WeightIntakePage() {
           </div>
         )}
 
-        {/* Step 9 — 6-month projection chart */}
-        {step === 9 && (
+        {/* Step 9 — personalized 6-month projection chart */}
+        {step === 9 && calc && (
           <div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: NAVY, lineHeight: 1.3, marginBottom: 48 }}>
-              In six months, you could lose <span style={{ color: '#10B981' }}>{projectedLoss} lbs.</span>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: NAVY, lineHeight: 1.3, marginBottom: 8 }}>
+              In six months, you could lose{' '}
+              <span style={{ color: '#10B981' }}>{calc.loss6mo} lbs.</span>
             </h1>
+            <p style={{ fontSize: 14, color: MUTED, marginBottom: 40 }}>
+              Based on your {calc.timelineLabel.toLowerCase()} timeline
+              {prevMeds === 'Yes' ? ', medication history' : ''}
+              {conditions.length > 0 && conditions[0] !== 'None of these' ? ', and health profile' : ''}.
+            </p>
 
-            {/* Chart */}
-            <div style={{ overflowX: 'auto', marginBottom: 32 }}>
-              <svg width={chartW} height={chartH} style={{ display: 'block', maxWidth: '100%' }}>
-                {/* Dashed reference lines */}
-                <line x1={pL} y1={y0} x2={x1 + 8} y2={y0} stroke={BORDER} strokeWidth={1.5} strokeDasharray="5 4" />
-                <line x1={pL} y1={y1} x2={x1 + 8} y2={y1} stroke={BORDER} strokeWidth={1.5} strokeDasharray="5 4" />
+            {/* Dynamic chart */}
+            <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+              <svg width={544} height={218} style={{ display: 'block', maxWidth: '100%' }}>
+                {/* Dashed top & bottom ref lines */}
+                <line x1={64} y1={chartPoints[0]?.y ?? 24} x2={532} y2={chartPoints[0]?.y ?? 24}
+                  stroke={BORDER} strokeWidth={1.5} strokeDasharray="5 4" />
+                <line x1={64} y1={chartPoints[6]?.y ?? 194} x2={532} y2={chartPoints[6]?.y ?? 194}
+                  stroke={BORDER} strokeWidth={1.5} strokeDasharray="5 4" />
 
-                {/* Weight labels */}
-                <text x={pL - 8} y={y0 + 5} textAnchor="end" fontSize={13} fontWeight={600} fill={NAVY} fontFamily="Inter, sans-serif">{currentWeight} lbs</text>
-                <text x={pL - 8} y={y1 + 5} textAnchor="end" fontSize={13} fontWeight={600} fill={NAVY} fontFamily="Inter, sans-serif">{projectedWeight} lbs</text>
+                {/* Weight axis labels */}
+                <text x={58} y={(chartPoints[0]?.y ?? 24) + 4} textAnchor="end" fontSize={12}
+                  fontWeight="600" fill={NAVY} fontFamily="Inter, sans-serif">
+                  {currentWeight} lbs
+                </text>
+                <text x={58} y={(chartPoints[6]?.y ?? 194) + 4} textAnchor="end" fontSize={12}
+                  fontWeight="600" fill={NAVY} fontFamily="Inter, sans-serif">
+                  {calc.proj6mo} lbs
+                </text>
 
-                {/* Smooth bezier curve */}
-                <path d={curve} fill="none" stroke="#6B81D4" strokeWidth={3} strokeLinecap="round" />
+                {/* Smooth curve through monthly waypoints */}
+                {chartPoints.length >= 2 && (
+                  <path d={smoothPath(chartPoints)} fill="none" stroke="#6B81D4" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+                )}
 
-                {/* Start dot */}
-                <circle cx={x0} cy={y0} r={7} fill="#6B81D4" />
-                {/* End dot */}
-                <circle cx={x1} cy={y1} r={7} fill="#6B81D4" />
+                {/* Goal weight dashed line (if within chart range) */}
+                {(() => {
+                  const gw = parseInt(goalWeight || '0')
+                  const cw = parseInt(currentWeight || '0')
+                  const minW = Math.min(...(calc?.monthlyWeights.slice(0, 7) ?? [cw])) - 2
+                  const maxW = cw + 2
+                  if (gw > 0 && gw < cw) {
+                    const gy = 24 + (1 - (gw - minW) / (maxW - minW)) * 170
+                    const clampY = Math.min(194, Math.max(24, gy))
+                    return (
+                      <>
+                        <line x1={64} y1={clampY} x2={532} y2={clampY}
+                          stroke="#10B981" strokeWidth={1} strokeDasharray="4 3" opacity={0.6} />
+                        <text x={536} y={clampY + 4} fontSize={10} fill="#10B981" fontFamily="Inter, sans-serif">Goal</text>
+                      </>
+                    )
+                  }
+                  return null
+                })()}
+
+                {/* Endpoint dots */}
+                {chartPoints.length >= 7 && (
+                  <>
+                    <circle cx={chartPoints[0].x} cy={chartPoints[0].y} r={6} fill="#6B81D4" />
+                    <circle cx={chartPoints[6].x} cy={chartPoints[6].y} r={6} fill="#6B81D4" />
+                  </>
+                )}
 
                 {/* Month labels */}
-                {months.map((m, i) => {
-                  const mx = pL + (plotW / (months.length - 1)) * i
-                  return (
-                    <text key={m} x={mx} y={chartH - 12} textAnchor="middle" fontSize={13} fill={MUTED} fontFamily="Inter, sans-serif">{m}</text>
-                  )
-                })}
+                {['Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((m, i) => (
+                  <text key={m} x={64 + (460 / 6) * i} y={210} textAnchor="middle"
+                    fontSize={12} fill={MUTED} fontFamily="Inter, sans-serif">{m}</text>
+                ))}
               </svg>
             </div>
 
-            <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.65, marginBottom: 40 }}>
-              Our members with a similar starting BMI lose an average of 10.2% of body weight in six months. Individual results may vary based on starting BMI and treatment adherence.
+            {/* Personalized stats row */}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
+              {[
+                { label: 'Weekly avg loss', value: `~${calc.weeklyLbs} lbs/wk` },
+                { label: '6-month target', value: `${calc.proj6mo} lbs` },
+                ...(calc.monthsToGoal > 0
+                  ? [{ label: 'Time to your goal', value: `~${calc.monthsToGoal} months` }]
+                  : [{ label: 'Program', value: calc.timelineLabel }]
+                ),
+              ].map(item => (
+                <div key={item.label} style={{ flex: 1, padding: '14px 10px', background: '#F9FAFB', border: `1px solid ${BORDER}`, borderRadius: 12, textAlign: 'center' }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: NAVY, marginBottom: 4 }}>{item.value}</div>
+                  <div style={{ fontSize: 11, color: MUTED }}>{item.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ fontSize: 13, color: MUTED, lineHeight: 1.65, marginBottom: 36 }}>
+              Projection based on your timeline, health profile, and clinical averages. Individual results vary.
             </p>
 
             <button onClick={goNext} style={nextBtn(true)}>Next</button>
@@ -359,13 +490,15 @@ export default function WeightIntakePage() {
         )}
 
         {/* Step 10 — Ready to start */}
-        {step === 10 && (
+        {step === 10 && calc && (
           <div>
             <h1 style={{ fontSize: 28, fontWeight: 700, color: NAVY, lineHeight: 1.3, marginBottom: 8 }}>
               Your plan is ready.
             </h1>
             <p style={{ fontSize: 15, color: MUTED, lineHeight: 1.65, marginBottom: 40 }}>
-              We&apos;ll match you with a provider and a medication plan built around your goals — in six months, you could lose {projectedLoss} lbs.
+              We&apos;ll match you with a provider and a {calc.timelineLabel.toLowerCase()} medication plan.
+              In six months, you could lose <strong style={{ color: NAVY }}>{calc.loss6mo} lbs</strong>
+              {calc.monthsToGoal > 0 ? ` — reaching your goal of ${goalWeight} lbs in ~${calc.monthsToGoal} months.` : '.'}
             </p>
 
             {/* What happens next */}
@@ -460,7 +593,9 @@ export default function WeightIntakePage() {
                 { label: 'Current weight', value: `${currentWeight} lbs` },
                 { label: 'Goal weight', value: `${goalWeight} lbs` },
                 { label: 'To lose', value: `${toLose} lbs` },
-                { label: '6-month projection', value: `−${projectedLoss} lbs` },
+                { label: '6-month projection', value: calc ? `−${calc.loss6mo} lbs` : '—' },
+                { label: 'Weekly avg loss', value: calc ? `~${calc.weeklyLbs} lbs/wk` : '—' },
+                { label: 'Timeline', value: calc?.timelineLabel ?? '—' },
                 { label: 'Program', value: 'GLP-1 (Semaglutide or Tirzepatide)' },
                 { label: 'Next step', value: 'Provider consultation' },
               ].map((r, i, arr) => (
