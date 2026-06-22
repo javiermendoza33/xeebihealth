@@ -1,3 +1,4 @@
+'use client'
 import IntakeFlow, { IntakeConfig } from '@/components/IntakeFlow'
 
 const config: IntakeConfig = {
