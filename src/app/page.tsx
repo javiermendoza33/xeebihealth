@@ -63,7 +63,7 @@ export default function HomePage() {
           </div>
 
           <h1 style={{ fontFamily: 'Georgia, serif', fontSize: 'clamp(44px,5.5vw,72px)', fontWeight: 400, lineHeight: 1.1, letterSpacing: -2, marginBottom: 28, color: '#fff' }}>
-            <strong style={{ fontWeight: 700 }}>Expert doctors.</strong><br />
+            <strong style={{ fontWeight: 700 }}>Expert providers.</strong><br />
             <em style={{ fontStyle: 'italic', color: 'var(--teal)' }}>Zero</em> waiting<br />
             rooms.
           </h1>
