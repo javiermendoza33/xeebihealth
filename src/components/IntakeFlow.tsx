@@ -157,30 +157,35 @@ export default function IntakeFlow({ config }: { config: IntakeConfig }) {
               onClick={async () => {
                 setSaving(true)
                 try {
-                  const supabase = createClient()
-                  const { data: { user } } = await supabase.auth.getUser()
-                  if (user) {
-                    await supabase.from('intake_submissions').insert({
-                      user_id: user.id,
-                      care_type: config.careType,
-                      answers,
-                    })
-                    const { data: profile } = await supabase
-                      .from('profiles')
-                      .select('full_name, email')
-                      .eq('id', user.id)
-                      .single()
-                    fetch('/api/emails/intake', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        patientName: profile?.full_name ?? '',
-                        patientEmail: profile?.email ?? user.email ?? '',
-                        careType: config.careType,
-                        answers,
-                      }),
-                    })
+                  const res = await fetch('/api/intake/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ careType: config.careType, answers }),
+                  })
+                  if (!res.ok) {
+                    const { error } = await res.json()
+                    console.error('Intake save failed:', error)
+                  } else {
+                    // Fire-and-forget email (non-blocking)
+                    const supabase = createClient()
+                    const { data: { user } } = await supabase.auth.getUser()
+                    if (user) {
+                      const { data: profile } = await supabase
+                        .from('profiles').select('full_name, email').eq('id', user.id).single()
+                      fetch('/api/emails/intake', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          patientName: profile?.full_name ?? '',
+                          patientEmail: profile?.email ?? user.email ?? '',
+                          careType: config.careType,
+                          answers,
+                        }),
+                      })
+                    }
                   }
+                } catch (err) {
+                  console.error('Intake save error:', err)
                 } finally {
                   router.push(config.doneHref)
                 }
