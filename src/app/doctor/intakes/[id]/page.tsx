@@ -28,16 +28,21 @@ export default async function DoctorIntakeDetailPage({ params }: { params: Promi
 
   const { data } = await supabase
     .from('intake_submissions')
-    .select('id, care_type, answers, submitted_at, profiles(full_name, email)')
+    .select('id, care_type, answers, submitted_at, user_id')
     .eq('id', id)
     .single()
 
   if (!data) notFound()
 
-  const profile = Array.isArray(data.profiles) ? data.profiles[0] : data.profiles
-  const name = (profile as { full_name?: string | null })?.full_name || (profile as { email?: string | null })?.email || 'Unknown patient'
-  const email = (profile as { email?: string | null })?.email ?? ''
-  const color = CARE_COLOR[data.care_type] ?? 'var(--teal)'
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', data.user_id)
+    .single()
+
+  const name = profile?.full_name || profile?.email || 'Unknown patient'
+  const email = profile?.email ?? ''
+  const color = CARE_COLOR[data.care_type] ?? '#7ECFCF'
   const label = CARE_LABELS[data.care_type] ?? data.care_type
   const submitted = new Date(data.submitted_at).toLocaleString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
@@ -55,7 +60,6 @@ export default async function DoctorIntakeDetailPage({ params }: { params: Promi
           ← Patient intakes
         </Link>
 
-        {/* Patient card */}
         <div className="rounded-2xl p-6 flex items-center gap-5"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
           <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold shrink-0"
@@ -63,7 +67,7 @@ export default async function DoctorIntakeDetailPage({ params }: { params: Promi
             {name.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
           </div>
           <div className="flex-1">
-            <p className="font-bold text-white text-lg">{name}</p>
+            <p className="font-bold text-lg" style={{ color: 'var(--fg)' }}>{name}</p>
             {email && <p className="text-sm mt-0.5" style={{ color: 'var(--muted)' }}>{email}</p>}
           </div>
           <span className="text-sm font-semibold px-4 py-1.5 rounded-full"
@@ -72,11 +76,10 @@ export default async function DoctorIntakeDetailPage({ params }: { params: Promi
           </span>
         </div>
 
-        {/* Answers */}
         <div className="rounded-2xl overflow-hidden"
           style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
           <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--divider)' }}>
-            <p className="text-sm font-semibold text-white">Patient Intake Answers</p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--fg)' }}>Patient Intake Answers</p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>Submitted {submitted}</p>
           </div>
           <div className="p-6 grid grid-cols-2 gap-4">
@@ -84,22 +87,21 @@ export default async function DoctorIntakeDetailPage({ params }: { params: Promi
               <div key={key} className="rounded-xl p-4"
                 style={{ background: 'var(--bg-dark)', border: '1px solid var(--divider)' }}>
                 <p className="text-xs mb-2 font-medium" style={{ color: 'var(--muted)' }}>{formatKey(key)}</p>
-                <p className="text-sm font-semibold text-white leading-relaxed">{formatVal(val)}</p>
+                <p className="text-sm font-semibold leading-relaxed" style={{ color: 'var(--fg)' }}>{formatVal(val)}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Doctor actions */}
         <div className="rounded-2xl p-5" style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)' }}>
-          <p className="text-sm font-semibold text-white mb-4">Clinical Actions</p>
+          <p className="text-sm font-semibold mb-4" style={{ color: 'var(--fg)' }}>Clinical Actions</p>
           <div className="flex flex-wrap gap-3">
             <button className="px-5 py-2.5 rounded-xl text-sm font-semibold"
-              style={{ background: '#0D2E1A', color: 'var(--green)', border: '1px solid rgba(100,200,140,0.2)' }}>
+              style={{ background: '#0D2E1A', color: '#64C88C', border: '1px solid rgba(100,200,140,0.2)' }}>
               ✓ Mark as reviewed
             </button>
             <button className="px-5 py-2.5 rounded-xl text-sm font-semibold"
-              style={{ background: 'var(--teal-dim)', color: 'var(--teal)' }}>
+              style={{ background: 'var(--teal-dim)', color: '#7ECFCF' }}>
               💬 Message patient
             </button>
             <button className="px-5 py-2.5 rounded-xl text-sm font-semibold"

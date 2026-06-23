@@ -14,10 +14,12 @@ const CARE_COLOR: Record<string, string> = {
   hair: '#F97316', longevity: '#14B8A6', menopause: '#A855F7',
 }
 
-type ProfileRow = { full_name: string | null; email: string | null }
-type Submission = {
-  id: string; care_type: string; answers: Record<string, unknown>
-  submitted_at: string; profiles: ProfileRow | ProfileRow[] | null
+const PREVIEW_KEYS: Record<string, string[]> = {
+  weight:  ['current_weight_lbs', 'goal_weight_lbs', 'bmi', 'conditions'],
+  mental:  ['s0', 's1', 's2'],
+  nutrition: ['s0', 's1', 's2'],
+  primary:   ['s0', 's1', 's2'],
+  default:   ['s0', 's1'],
 }
 
 function formatVal(v: unknown): string {
@@ -26,24 +28,22 @@ function formatVal(v: unknown): string {
   return String(v)
 }
 
-// Key answers to surface as a quick preview per care type
-const PREVIEW_KEYS: Record<string, string[]> = {
-  weight:      ['current_weight_lbs', 'goal_weight_lbs', 'bmi', 'conditions'],
-  mental:      ['s0', 's1', 's2'],
-  nutrition:   ['s0', 's1', 's2'],
-  primary:     ['s0', 's1', 's2'],
-  default:     ['s0', 's1'],
-}
-
 export default async function DoctorIntakesPage() {
   const supabase = await createClient()
-  const { data, error } = await supabase
+
+  const { data: subs, error } = await supabase
     .from('intake_submissions')
-    .select('id, care_type, answers, submitted_at, profiles(full_name, email)')
+    .select('id, care_type, answers, submitted_at, user_id')
     .order('submitted_at', { ascending: false })
     .limit(100)
 
-  const submissions = (data ?? []) as unknown as Submission[]
+  // Fetch profiles separately (user_id → auth.users, profiles.id = auth.users.id)
+  const userIds = [...new Set((subs ?? []).map(s => s.user_id))]
+  const { data: profiles } = userIds.length
+    ? await supabase.from('profiles').select('id, full_name, email').in('id', userIds)
+    : { data: [] }
+
+  const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
   return (
     <>
@@ -51,43 +51,42 @@ export default async function DoctorIntakesPage() {
       <div className="p-8 space-y-4">
 
         {error && (
-          <div style={{ padding: '14px 20px', background: '#1A2E0D', border: '1px solid #EF4444', borderRadius: 12, fontSize: 14, color: '#F87171' }}>
+          <div style={{ padding: '14px 20px', background: '#2E1010', border: '1px solid #EF4444', borderRadius: 12, fontSize: 14, color: '#EF4444' }}>
             Error loading intakes: {error.message}
           </div>
         )}
 
-        {submissions.length === 0 && !error && (
+        {(subs ?? []).length === 0 && !error && (
           <div style={{ padding: '48px', textAlign: 'center', background: 'var(--card-bg)', border: '1px solid var(--divider)', borderRadius: 16 }}>
             <p style={{ fontSize: 15, color: 'var(--muted)' }}>No patient intakes yet.</p>
           </div>
         )}
 
-        {submissions.map(s => {
-          const profile = Array.isArray(s.profiles) ? s.profiles[0] : s.profiles
+        {(subs ?? []).map(s => {
+          const profile = profileMap[s.user_id] ?? null
           const name = profile?.full_name || profile?.email || 'Unknown patient'
           const email = profile?.email ?? ''
-          const color = CARE_COLOR[s.care_type] ?? 'var(--teal)'
+          const color = CARE_COLOR[s.care_type] ?? '#7ECFCF'
           const label = CARE_LABELS[s.care_type] ?? s.care_type
           const date = new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
           const time = new Date(s.submitted_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+          const answers = s.answers as Record<string, unknown>
           const previewKeys = PREVIEW_KEYS[s.care_type] ?? PREVIEW_KEYS.default
           const preview = previewKeys
-            .filter(k => s.answers[k] !== undefined)
-            .map(k => ({ label: k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: formatVal(s.answers[k]) }))
-          // Fall back to first 3 answer pairs if no preview keys matched
+            .filter(k => answers[k] !== undefined)
+            .map(k => ({ label: k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: formatVal(answers[k]) }))
           const displayPreview = preview.length > 0
             ? preview
-            : Object.entries(s.answers).slice(0, 3).map(([k, v]) => ({ label: k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: formatVal(v) }))
+            : Object.entries(answers).slice(0, 3).map(([k, v]) => ({ label: k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value: formatVal(v) }))
 
           return (
             <div key={s.id} style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)', borderRadius: 16, overflow: 'hidden' }}>
-              {/* Card header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', borderBottom: '1px solid var(--divider)' }}>
                 <div style={{ width: 40, height: 40, borderRadius: '50%', background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color, flexShrink: 0 }}>
                   {name.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: 'white', marginBottom: 1 }}>{name}</p>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--fg)', marginBottom: 1 }}>{name}</p>
                   {email && <p style={{ fontSize: 11, color: 'var(--muted)' }}>{email}</p>}
                 </div>
                 <span style={{ padding: '4px 12px', background: `${color}18`, border: `1px solid ${color}44`, borderRadius: 100, fontSize: 11, fontWeight: 600, color }}>
@@ -96,20 +95,18 @@ export default async function DoctorIntakesPage() {
                 <span style={{ fontSize: 11, color: 'var(--muted)', marginLeft: 8 }}>{date} · {time}</span>
               </div>
 
-              {/* Answer preview */}
               <div style={{ padding: '14px 20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
                 {displayPreview.map(({ label: l, value: v }) => (
                   <div key={l} style={{ padding: '10px 14px', background: 'var(--bg-dark)', border: '1px solid var(--divider)', borderRadius: 10 }}>
                     <p style={{ fontSize: 10, color: 'var(--muted)', marginBottom: 3, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase' }}>{l}</p>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>{v}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)' }}>{v}</p>
                   </div>
                 ))}
               </div>
 
-              {/* Actions */}
               <div style={{ padding: '12px 20px', borderTop: '1px solid var(--divider)', display: 'flex', gap: 10 }}>
                 <Link href={`/doctor/intakes/${s.id}`}
-                  style={{ padding: '8px 18px', background: 'var(--teal-dim)', color: 'var(--teal)', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+                  style={{ padding: '8px 18px', background: 'var(--teal-dim)', color: '#7ECFCF', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
                   View full intake →
                 </Link>
                 <button style={{ padding: '8px 18px', background: 'var(--divider)', color: 'var(--muted)', borderRadius: 8, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}>

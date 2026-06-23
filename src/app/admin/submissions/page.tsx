@@ -14,36 +14,35 @@ const CARE_COLOR: Record<string, string> = {
   hair: '#F97316', longevity: '#14B8A6', menopause: '#A855F7',
 }
 
-type ProfileRow = { full_name: string | null; email: string | null }
-type Submission = {
-  id: string; care_type: string; answers: Record<string, unknown>
-  submitted_at: string; profiles: ProfileRow | ProfileRow[] | null
-}
-
 export default async function SubmissionsPage() {
   const supabase = await createClient()
-  const { data, error } = await supabase
+
+  const { data: subs, error } = await supabase
     .from('intake_submissions')
-    .select('id, care_type, answers, submitted_at, profiles(full_name, email)')
+    .select('id, care_type, answers, submitted_at, user_id')
     .order('submitted_at', { ascending: false })
     .limit(200)
 
-  const submissions = (data ?? []) as unknown as Submission[]
-  const careTypes = Array.from(new Set(submissions.map(s => s.care_type))).sort()
+  const userIds = [...new Set((subs ?? []).map(s => s.user_id))]
+  const { data: profiles } = userIds.length
+    ? await supabase.from('profiles').select('id, full_name, email').in('id', userIds)
+    : { data: [] }
+
+  const profileMap = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
+  const careTypes = Array.from(new Set((subs ?? []).map(s => s.care_type))).sort()
 
   return (
     <>
       <TopBar title="Intake Submissions" subtitle="Click any row to view the full patient intake" />
       <div className="p-8 space-y-6">
 
-        {/* Summary chips */}
         <div className="flex flex-wrap gap-3">
           <div style={{ padding: '8px 18px', background: 'var(--card-bg)', border: '1px solid var(--divider)', borderRadius: 100, fontSize: 13, color: 'var(--muted)' }}>
-            <strong style={{ color: 'white' }}>{submissions.length}</strong> total
+            <strong style={{ color: 'var(--fg)' }}>{(subs ?? []).length}</strong> total
           </div>
           {careTypes.map(ct => {
-            const count = submissions.filter(s => s.care_type === ct).length
-            const color = CARE_COLOR[ct] ?? 'var(--teal)'
+            const count = (subs ?? []).filter(s => s.care_type === ct).length
+            const color = CARE_COLOR[ct] ?? '#7ECFCF'
             return (
               <div key={ct} style={{ padding: '8px 18px', background: 'var(--card-bg)', border: `1px solid ${color}33`, borderRadius: 100, fontSize: 13, color }}>
                 <strong>{count}</strong> {CARE_LABELS[ct] ?? ct}
@@ -58,56 +57,51 @@ export default async function SubmissionsPage() {
           </div>
         )}
 
-        {submissions.length === 0 && !error && (
+        {(subs ?? []).length === 0 && !error && (
           <div style={{ padding: '48px', textAlign: 'center', background: 'var(--card-bg)', border: '1px solid var(--divider)', borderRadius: 16 }}>
             <p style={{ fontSize: 15, color: 'var(--muted)' }}>No submissions yet.</p>
           </div>
         )}
 
-        {submissions.length > 0 && (
+        {(subs ?? []).length > 0 && (
           <div style={{ background: 'var(--card-bg)', border: '1px solid var(--divider)', borderRadius: 16, overflow: 'hidden' }}>
-            {/* Header */}
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1.5fr 60px', padding: '12px 24px', borderBottom: '1px solid var(--divider)', background: 'rgba(255,255,255,0.02)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1.5fr 60px', padding: '12px 24px', borderBottom: '1px solid var(--divider)' }}>
               {['Patient', 'Care Type', 'Submitted', ''].map(h => (
                 <span key={h} style={{ fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', fontWeight: 600 }}>{h}</span>
               ))}
             </div>
 
-            {submissions.map((s, i) => {
-              const profile = Array.isArray(s.profiles) ? s.profiles[0] : s.profiles
+            {(subs ?? []).map((s, i) => {
+              const profile = profileMap[s.user_id] ?? null
               const name = profile?.full_name || profile?.email || 'Unknown patient'
               const email = profile?.email ?? ''
-              const color = CARE_COLOR[s.care_type] ?? 'var(--teal)'
+              const color = CARE_COLOR[s.care_type] ?? '#7ECFCF'
               const label = CARE_LABELS[s.care_type] ?? s.care_type
               const date = new Date(s.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
               const time = new Date(s.submitted_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-              const answerCount = Object.keys(s.answers).length
-              const isLast = i === submissions.length - 1
+              const answerCount = Object.keys(s.answers as object).length
+              const isLast = i === (subs ?? []).length - 1
 
               return (
                 <Link key={s.id} href={`/admin/submissions/${s.id}`}
-                  style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1.5fr 60px', padding: '16px 24px', alignItems: 'center', textDecoration: 'none', borderBottom: isLast ? 'none' : '1px solid var(--divider)', transition: 'background 0.15s' }}
-                  className="hover:bg-white/5">
-                  {/* Patient */}
+                  style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1.5fr 60px', padding: '16px 24px', alignItems: 'center', textDecoration: 'none', borderBottom: isLast ? 'none' : '1px solid var(--divider)' }}
+                  className="hover:bg-black/5">
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ width: 36, height: 36, borderRadius: '50%', background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color, flexShrink: 0 }}>
                       {name.split(' ').map((w: string) => w[0]).join('').slice(0, 2)}
                     </div>
                     <div>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: 'white', marginBottom: 1 }}>{name}</p>
+                      <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', marginBottom: 1 }}>{name}</p>
                       {email && <p style={{ fontSize: 11, color: 'var(--muted)' }}>{email}</p>}
                     </div>
                   </div>
-                  {/* Care type */}
                   <span style={{ display: 'inline-block', padding: '4px 12px', background: `${color}18`, border: `1px solid ${color}44`, borderRadius: 100, fontSize: 12, fontWeight: 600, color, width: 'fit-content' }}>
                     {label}
                   </span>
-                  {/* Date + answer count */}
                   <div>
-                    <p style={{ fontSize: 13, color: 'white' }}>{date}</p>
+                    <p style={{ fontSize: 13, color: 'var(--fg)' }}>{date}</p>
                     <p style={{ fontSize: 11, color: 'var(--muted)' }}>{time} · {answerCount} answers</p>
                   </div>
-                  {/* Arrow */}
                   <span style={{ fontSize: 14, color: 'var(--muted)', textAlign: 'right' }}>→</span>
                 </Link>
               )
