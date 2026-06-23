@@ -165,6 +165,21 @@ export default function IntakeFlow({ config }: { config: IntakeConfig }) {
                       care_type: config.careType,
                       answers,
                     })
+                    const { data: profile } = await supabase
+                      .from('profiles')
+                      .select('full_name, email')
+                      .eq('id', user.id)
+                      .single()
+                    fetch('/api/emails/intake', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        patientName: profile?.full_name ?? '',
+                        patientEmail: profile?.email ?? user.email ?? '',
+                        careType: config.careType,
+                        answers,
+                      }),
+                    })
                   }
                 } finally {
                   router.push(config.doneHref)

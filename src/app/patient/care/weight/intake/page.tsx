@@ -615,21 +615,37 @@ export default function WeightIntakePage() {
                   const supabase = createClient()
                   const { data: { user } } = await supabase.auth.getUser()
                   if (user) {
+                    const weightAnswers = {
+                      height: `${heightFt}ft ${heightIn}in`,
+                      current_weight_lbs: currentWeight,
+                      goal_weight_lbs: goalWeight,
+                      timeline,
+                      conditions,
+                      prev_weight_loss_meds: prevMeds,
+                      medications,
+                      payment_preference: payment,
+                      bmi: bmi,
+                      projected_6mo_loss_lbs: calc?.loss6mo,
+                    }
                     await supabase.from('intake_submissions').insert({
                       user_id: user.id,
                       care_type: 'weight',
-                      answers: {
-                        height: `${heightFt}ft ${heightIn}in`,
-                        current_weight_lbs: currentWeight,
-                        goal_weight_lbs: goalWeight,
-                        timeline,
-                        conditions,
-                        prev_weight_loss_meds: prevMeds,
-                        medications,
-                        payment_preference: payment,
-                        bmi: bmi,
-                        projected_6mo_loss_lbs: calc?.loss6mo,
-                      },
+                      answers: weightAnswers,
+                    })
+                    const { data: profile } = await supabase
+                      .from('profiles')
+                      .select('full_name, email')
+                      .eq('id', user.id)
+                      .single()
+                    fetch('/api/emails/intake', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        patientName: profile?.full_name ?? '',
+                        patientEmail: profile?.email ?? user.email ?? '',
+                        careType: 'weight',
+                        answers: weightAnswers,
+                      }),
                     })
                   }
                 } finally {
