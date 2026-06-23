@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 const CONDITIONS = [
   'None of these',
@@ -50,6 +51,7 @@ export default function WeightIntakePage() {
   const [prevMeds, setPrevMeds] = useState<string | null>(null)
   const [medications, setMedications] = useState<string[]>([])
   const [payment, setPayment] = useState('')
+  const [saving, setSaving] = useState(false)
 
   const totalInches = (parseInt(heightFt) || 0) * 12 + (parseInt(heightIn) || 0)
   const bmiRaw = totalInches > 0 && currentWeight
@@ -605,9 +607,37 @@ export default function WeightIntakePage() {
                 </div>
               ))}
             </div>
-            <button onClick={() => router.push('/patient/care/weight')}
-              style={{ width: '100%', padding: '18px', background: NAVY, color: '#fff', border: 'none', borderRadius: 100, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
-              Go to my weight care plan →
+            <button
+              disabled={saving}
+              onClick={async () => {
+                setSaving(true)
+                try {
+                  const supabase = createClient()
+                  const { data: { user } } = await supabase.auth.getUser()
+                  if (user) {
+                    await supabase.from('intake_submissions').insert({
+                      user_id: user.id,
+                      care_type: 'weight',
+                      answers: {
+                        height: `${heightFt}ft ${heightIn}in`,
+                        current_weight_lbs: currentWeight,
+                        goal_weight_lbs: goalWeight,
+                        timeline,
+                        conditions,
+                        prev_weight_loss_meds: prevMeds,
+                        medications,
+                        payment_preference: payment,
+                        bmi: bmi,
+                        projected_6mo_loss_lbs: calc?.loss6mo,
+                      },
+                    })
+                  }
+                } finally {
+                  router.push('/patient/care/weight')
+                }
+              }}
+              style={{ width: '100%', padding: '18px', background: NAVY, color: '#fff', border: 'none', borderRadius: 100, fontSize: 16, fontWeight: 600, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+              {saving ? 'Saving…' : 'Go to my weight care plan →'}
             </button>
           </div>
         )}

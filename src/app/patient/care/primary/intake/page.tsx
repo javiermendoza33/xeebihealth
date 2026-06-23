@@ -4,6 +4,7 @@ import IntakeFlow, { IntakeConfig } from '@/components/IntakeFlow'
 const config: IntakeConfig = {
   backHref: '/patient/care/primary',
   doneHref: '/patient/care/primary',
+  careType: 'primary',
   steps: [
     {
       kind: 'single', q: 'What brings you to primary care?',

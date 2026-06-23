@@ -4,6 +4,7 @@ import IntakeFlow, { IntakeConfig } from '@/components/IntakeFlow'
 const config: IntakeConfig = {
   backHref: '/patient/care/urgent',
   doneHref: '/patient/care/urgent',
+  careType: 'urgent',
   steps: [
     {
       kind: 'multi', q: 'What are you experiencing?', sub: 'Select all that apply.',

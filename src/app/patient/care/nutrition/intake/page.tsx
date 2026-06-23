@@ -4,6 +4,7 @@ import IntakeFlow, { IntakeConfig } from '@/components/IntakeFlow'
 const config: IntakeConfig = {
   backHref: '/patient/care/nutrition',
   doneHref: '/patient/care/nutrition',
+  careType: 'nutrition',
   steps: [
     {
       kind: 'single', q: "What's your primary nutrition goal?",

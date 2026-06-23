@@ -4,6 +4,7 @@ import IntakeFlow, { IntakeConfig } from '@/components/IntakeFlow'
 const config: IntakeConfig = {
   backHref: '/patient/care/longevity',
   doneHref: '/patient/care/longevity',
+  careType: 'longevity',
   steps: [
     {
       kind: 'multi', q: 'What are your longevity goals?', sub: 'Select all that apply.',

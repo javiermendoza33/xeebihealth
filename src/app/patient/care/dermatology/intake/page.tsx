@@ -4,6 +4,7 @@ import IntakeFlow, { IntakeConfig } from '@/components/IntakeFlow'
 const config: IntakeConfig = {
   backHref: '/patient/care/dermatology',
   doneHref: '/patient/care/dermatology',
+  careType: 'dermatology',
   steps: [
     {
       kind: 'multi', q: "What's your main skin concern?", sub: 'Select all that apply.',

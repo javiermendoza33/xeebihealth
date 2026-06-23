@@ -4,6 +4,7 @@ import IntakeFlow, { IntakeConfig } from '@/components/IntakeFlow'
 const config: IntakeConfig = {
   backHref: '/patient/care/womens',
   doneHref: '/patient/care/womens',
+  careType: 'womens',
   steps: [
     {
       kind: 'multi', q: "What brings you here?", sub: 'Select all that apply.',

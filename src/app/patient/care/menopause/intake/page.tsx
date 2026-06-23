@@ -4,6 +4,7 @@ import IntakeFlow, { IntakeConfig } from '@/components/IntakeFlow'
 const config: IntakeConfig = {
   backHref: '/patient/care/menopause',
   doneHref: '/patient/care/menopause',
+  careType: 'menopause',
   steps: [
     {
       kind: 'multi', q: 'Which symptoms are you experiencing?', sub: 'Select all that apply.',

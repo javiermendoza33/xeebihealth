@@ -37,3 +37,27 @@ create policy "Users can update their own profile" on public.profiles for update
 create policy "Admins can view all profiles" on public.profiles for select using (
   exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
 );
+
+-- ── Intake submissions ────────────────────────────────────────────────────────
+create table if not exists public.intake_submissions (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid references auth.users on delete cascade not null,
+  care_type   text not null,
+  answers     jsonb not null default '{}',
+  submitted_at timestamptz default now()
+);
+
+alter table public.intake_submissions enable row level security;
+
+-- Patients can insert and read their own submissions
+create policy "Patients can insert own submissions" on public.intake_submissions
+  for insert with check (auth.uid() = user_id);
+
+create policy "Patients can view own submissions" on public.intake_submissions
+  for select using (auth.uid() = user_id);
+
+-- Admins can read all submissions
+create policy "Admins can view all submissions" on public.intake_submissions
+  for select using (
+    exists (select 1 from public.profiles where id = auth.uid() and role = 'admin')
+  );

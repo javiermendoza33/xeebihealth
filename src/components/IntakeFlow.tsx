@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 // ── Step types ────────────────────────────────────────────────────────────────
 export type SingleStep  = { kind: 'single'; q: string; sub?: string; options: { label: string; sub?: string }[] }
@@ -12,6 +13,7 @@ export type IntakeStep  = SingleStep | MultiStep | YesNoStep | RevealStep
 export type IntakeConfig = {
   backHref: string
   doneHref: string
+  careType: string
   steps: IntakeStep[]
 }
 
@@ -24,6 +26,7 @@ export default function IntakeFlow({ config }: { config: IntakeConfig }) {
   const router = useRouter()
   const [step, setStep] = useState(0)
   const [answers, setAnswers] = useState<Record<string, unknown>>({})
+  const [saving, setSaving] = useState(false)
 
   const total   = config.steps.length
   const progress = step === 0 ? 0 : Math.round((step / (total - 1)) * 100)
@@ -149,9 +152,26 @@ export default function IntakeFlow({ config }: { config: IntakeConfig }) {
                 </div>
               ))}
             </div>
-            <button onClick={() => router.push(config.doneHref)}
-              style={{ width: '100%', padding: '17px', background: N, color: '#fff', border: 'none', borderRadius: 100, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
-              Continue to my care plan →
+            <button
+              disabled={saving}
+              onClick={async () => {
+                setSaving(true)
+                try {
+                  const supabase = createClient()
+                  const { data: { user } } = await supabase.auth.getUser()
+                  if (user) {
+                    await supabase.from('intake_submissions').insert({
+                      user_id: user.id,
+                      care_type: config.careType,
+                      answers,
+                    })
+                  }
+                } finally {
+                  router.push(config.doneHref)
+                }
+              }}
+              style={{ width: '100%', padding: '17px', background: N, color: '#fff', border: 'none', borderRadius: 100, fontSize: 16, fontWeight: 600, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}>
+              {saving ? 'Saving…' : 'Continue to my care plan →'}
             </button>
           </div>
         )}

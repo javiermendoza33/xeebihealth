@@ -4,6 +4,7 @@ import IntakeFlow, { IntakeConfig } from '@/components/IntakeFlow'
 const config: IntakeConfig = {
   backHref: '/patient/care/hair',
   doneHref: '/patient/care/hair',
+  careType: 'hair',
   steps: [
     {
       kind: 'single', q: 'How would you describe your hair loss?',

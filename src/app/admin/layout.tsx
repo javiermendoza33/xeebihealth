@@ -8,6 +8,7 @@ const NAV = [
   { label: 'Analytics',   href: '/admin/analytics',  icon: '📈' },
   { label: 'Billing',     href: '/admin/billing',    icon: '💰' },
   { label: 'Settings',    href: '/admin/settings',   icon: '⚙️' },
+  { label: 'Intake Forms', href: '/admin/submissions', icon: '📋' },
   { label: 'Audit Logs',  href: '/admin/audit',      icon: '🔍' },
 ]
 
