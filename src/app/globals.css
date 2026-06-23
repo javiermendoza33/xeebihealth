@@ -37,10 +37,13 @@
   --muted: #64748B;
   --teal-dim: #E2E8F0;
   --fg: #0F172A;
+  color: #0F172A;
+  background: #F8FAFC;
 }
 
-.staff-portal .text-white {
-  color: var(--fg);
+.staff-portal .text-white,
+.staff-portal [class*="text-white"] {
+  color: #0F172A !important;
 }
 
 * { box-sizing: border-box; }
