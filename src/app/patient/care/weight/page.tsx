@@ -133,7 +133,7 @@ export default function WeightCarePage() {
               <p style={{ fontSize: 14, color: MUTED_SAGE, lineHeight: 1.65, marginBottom: 24 }}>
                 Work with a registered dietitian alongside your medication for sustainable, lasting results.
               </p>
-              <Link href="#" style={{
+              <Link href="/patient/care/nutrition/intake" style={{
                 display: 'inline-block', padding: '11px 22px',
                 background: SAGE_LIGHT, color: SAGE_MID,
                 borderRadius: 100, fontSize: 14, fontWeight: 600, textDecoration: 'none',
