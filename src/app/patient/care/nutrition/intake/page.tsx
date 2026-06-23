@@ -3,7 +3,7 @@ import IntakeFlow, { IntakeConfig } from '@/components/IntakeFlow'
 
 const config: IntakeConfig = {
   backHref: '/patient/care/nutrition',
-  doneHref: '/patient/care/nutrition',
+  doneHref: '/patient/appointments/book?care=nutrition',
   careType: 'nutrition',
   steps: [
     {
