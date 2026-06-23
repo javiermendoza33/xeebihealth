@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import TopBar from '@/components/TopBar'
 import Link from 'next/link'
 
@@ -15,7 +15,7 @@ const CARE_COLOR: Record<string, string> = {
 }
 
 export default async function SubmissionsPage() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data: subs, error } = await supabase
     .from('intake_submissions')

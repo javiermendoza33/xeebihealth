@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import TopBar from '@/components/TopBar'
 import Link from 'next/link'
 
@@ -29,7 +29,7 @@ function formatVal(v: unknown): string {
 }
 
 export default async function DoctorIntakesPage() {
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data: subs, error } = await supabase
     .from('intake_submissions')

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import TopBar from '@/components/TopBar'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -24,7 +24,7 @@ function formatVal(v: unknown): string {
 
 export default async function SubmissionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
+  const supabase = createAdminClient()
 
   const { data } = await supabase
     .from('intake_submissions')
