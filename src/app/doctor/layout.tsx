@@ -14,7 +14,7 @@ const NAV = [
 
 export default function DoctorLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen">
+    <div className="staff-portal flex min-h-screen">
       <Sidebar portalLabel="Doctor Portal" accentColor="var(--green)" navItems={NAV} />
       <main className="flex-1 ml-60 flex flex-col min-h-screen" style={{ background: 'var(--bg-dark)' }}>
         {children}

@@ -28,6 +28,21 @@
   color: var(--fg);
 }
 
+/* Doctor / Admin portals — clean light theme */
+.staff-portal {
+  --bg-dark: #F8FAFC;
+  --sidebar-bg: #F1F5F9;
+  --card-bg: #FFFFFF;
+  --divider: #E2E8F0;
+  --muted: #64748B;
+  --teal-dim: #E2E8F0;
+  --fg: #0F172A;
+}
+
+.staff-portal .text-white {
+  color: var(--fg);
+}
+
 * { box-sizing: border-box; }
 
 body {

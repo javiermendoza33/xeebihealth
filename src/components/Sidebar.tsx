@@ -19,11 +19,11 @@ interface SidebarProps {
 const DARK = {
   bg:           'var(--sidebar-bg)',
   border:       'var(--divider)',
-  logoText:     '#FFFFFF',
+  logoText:     'var(--fg)',
   sectionLabel: 'var(--muted)',
   navText:      'var(--muted)',
   activeNavBg:  'var(--teal-dim)',
-  activeNavText:'#FFFFFF',
+  activeNavText:'var(--fg)',
   divider:      'var(--divider)',
   signOut:      'var(--muted)',
 }
